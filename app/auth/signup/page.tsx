@@ -1,7 +1,9 @@
-import React from "react";
+import SignupForm from "@/components/signup-form";
 
-const Signup = () => {
-  return <div>Signup</div>;
-};
-
-export default Signup;
+export default function Home() {
+  return (
+    <main className="flex min-h-screen items-center justify-center">
+      <SignupForm />
+    </main>
+  );
+}
