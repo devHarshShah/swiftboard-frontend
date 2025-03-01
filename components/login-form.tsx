@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -20,10 +19,26 @@ export default function LoginForm() {
     setShowPassword(!showPassword);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Login attempt with:", { email, password });
+
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("Login failed:", data.error);
+      // Handle login failure (e.g., show an error message)
+    } else {
+      console.log("Login successful:", data);
+      // Handle login success (e.g., redirect to dashboard)
+    }
   };
 
   const settings = {
