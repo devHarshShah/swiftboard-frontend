@@ -23,5 +23,20 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json(data);
+  const res = NextResponse.json(data);
+
+  // Set cookies
+  res.cookies.set("access_token", data.accessToken, {
+    httpOnly: true,
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+    path: "/",
+  });
+
+  res.cookies.set("refresh_token", data.refreshToken, {
+    httpOnly: true,
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+    path: "/",
+  });
+
+  return res;
 }

@@ -9,11 +9,17 @@ import { FaGoogle, FaGithub } from "react-icons/fa";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import { Toast } from "./ui/toast";
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState({
+    title: "",
+    description: "",
+  });
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -34,10 +40,15 @@ export default function LoginForm() {
 
     if (!response.ok) {
       console.error("Login failed:", data.error);
-      // Handle login failure (e.g., show an error message)
+      setToastMessage({ title: "Login Failed", description: data.error });
+      setToastOpen(true);
     } else {
       console.log("Login successful:", data);
-      // Handle login success (e.g., redirect to dashboard)
+      setToastMessage({
+        title: "Login Successful",
+        description: "You have successfully logged in.",
+      });
+      setToastOpen(true);
     }
   };
 
@@ -54,7 +65,6 @@ export default function LoginForm() {
 
   return (
     <div className="flex h-screen w-full overflow-hidden rounded-lg bg-background shadow-glow dark:bg-dark-900 py-8 px-12">
-      {/* Left side with illustration */}
       <div className="relative hidden w-1/2 lg:block">
         <div className="flex items-center justify-center p-8 h-full">
           <Image
@@ -221,9 +231,12 @@ export default function LoginForm() {
           </div>
 
           <div className="flex justify-center space-x-4">
-            <button className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card hover:bg-secondary">
+            <Link
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card hover:bg-secondary"
+              href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/google`}
+            >
               <FaGoogle className="h-6 w-6 text-primary" />
-            </button>
+            </Link>
             <button className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card hover:bg-secondary">
               <FaGithub className="h-6 w-6 text-primary" />
             </button>
@@ -240,6 +253,12 @@ export default function LoginForm() {
           </p>
         </div>
       </div>
+      <Toast
+        title={toastMessage.title}
+        description={toastMessage.description}
+        open={toastOpen}
+        onOpenChange={setToastOpen}
+      />
     </div>
   );
 }
