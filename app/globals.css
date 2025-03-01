@@ -2,20 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Setting dark theme values as default */
+    --background: 240 46% 10%; /* #0F0F23 */
+    --foreground: 240 30% 90%; /* Light text */
+    --card: 240 38% 15%; /* #1A1A35 */
+    --card-foreground: 240 30% 90%;
+    --popover: 240 38% 15%;
+    --popover-foreground: 240 30% 90%;
+    --primary: 221.2 83.2% 53.3%; /* #3B82F6 - Blue button */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 240 25% 21%; /* #252543 */
+    --secondary-foreground: 240 40% 80%;
+    --muted: 240 20% 25%;
+    --muted-foreground: 240 20% 70%;
+    --accent: 240 25% 40%; /* Purplish accent */
+    --accent-foreground: 240 40% 90%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 240 26% 27%; /* #313159 */
+    --input: 240 26% 27%;
+    --ring: 221.2 83.2% 53.3%; /* Blue glow */
+    --radius: 0.5rem;
+
+    /* Chart colors - using dark theme values by default */
+    --chart-1: 221.2 83.2% 60%; /* Brighter blue */
+    --chart-2: 180 100% 60%;
+    --chart-3: 39 100% 60%;
+    --chart-4: 300 100% 60%;
+    --chart-5: 120 100% 60%;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+/* Add a utility class for shadow glow effect mentioned in your component */
+@layer utilities {
+  .shadow-glow {
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+  }
 }
