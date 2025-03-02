@@ -2,11 +2,20 @@
 
 import type React from "react";
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { Eye, EyeOff, Mail, Info, HelpCircle } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Info,
+  HelpCircle,
+  Check,
+  Clock,
+  Shield,
+  Medal,
+  Users,
+} from "lucide-react";
 import { FaGoogle, FaGithub } from "react-icons/fa";
-import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { Toast } from "./ui/toast";
@@ -53,104 +62,14 @@ export default function LoginForm() {
     }
   };
 
-  const settings = {
-    dots: true,
-    arrows: false,
-    infinite: true,
-    speed: 1000,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 8000,
-  };
-
   return (
     <div className={`w-full`}>
       <div className="flex flex-col h-screen w-full overflow-hidden bg-background dark:bg-dark-900">
         <Navbar />
-        <div className="flex flex-1 w-full rounded-lg shadow-glow py-8 px-12">
-          {/* Left side with slider */}
-          <div className="relative hidden w-1/2 lg:block">
-            <div className="flex items-center justify-center p-8 h-full">
-              <Image
-                src="/illustration.jpg"
-                alt="Login illustration"
-                layout="fill"
-                className="object-cover rounded-3xl"
-                priority
-              />
-            </div>
-            <div className="absolute bottom-0 w-full">
-              <Slider {...settings}>
-                <div className="p-8">
-                  <h3 className="text-4xl font-bold text-white mb-4">
-                    Task & Subtask Management
-                  </h3>
-                  <p className="text-lg text-white">
-                    Break down complex projects into manageable tasks and
-                    subtasks. Assign responsibilities, set deadlines, and track
-                    real-time progress with an intuitive interface that keeps
-                    your team aligned.
-                  </p>
-                </div>
-                <div className="p-8">
-                  <h3 className="text-4xl font-bold text-white mb-4">
-                    Seamless Collaboration
-                  </h3>
-                  <p className="text-lg text-white">
-                    Foster teamwork with built-in chat, comments, and @mentions.
-                    Share files, provide feedback instantly, and integrate with
-                    Slack, Teams, and email for a connected workflow.
-                  </p>
-                </div>
-                <div className="p-8">
-                  <h3 className="text-4xl font-bold text-white mb-4">
-                    Advanced Analytics & Reports
-                  </h3>
-                  <p className="text-lg text-white">
-                    Gain deep insights into team performance, workload
-                    distribution, and project bottlenecks. Visualize progress
-                    with charts, generate custom reports, and optimize
-                    efficiency with data-driven decisions.
-                  </p>
-                </div>
-                <div className="p-8">
-                  <h3 className="text-4xl font-bold text-white mb-4">
-                    Dark Mode for Enhanced Focus
-                  </h3>
-                  <p className="text-lg text-white">
-                    Work comfortably with a sleek, professional dark theme
-                    designed for long hours of productivity. Reduce eye strain
-                    and improve focus while navigating your tasks effortlessly.
-                  </p>
-                </div>
-                <div className="p-8">
-                  <h3 className="text-4xl font-bold text-white mb-4">
-                    Secure & Scalable Infrastructure
-                  </h3>
-                  <p className="text-lg text-white">
-                    Built on enterprise-grade architecture, our platform ensures
-                    your data is encrypted and protected with robust security
-                    measures. Scale effortlessly as your team grows, without
-                    compromising performance.
-                  </p>
-                </div>
-                <div className="p-8">
-                  <h3 className="text-4xl font-bold text-white mb-4">
-                    Automations & Integrations
-                  </h3>
-                  <p className="text-lg text-white">
-                    Save time with automation rules that handle repetitive
-                    tasks. Seamlessly integrate with Jira, Notion, Trello,
-                    GitHub, and over 100+ tools to streamline your workflow.
-                  </p>
-                </div>
-              </Slider>
-            </div>
-          </div>
-
+        <div className="flex flex-1 w-full rounded-lg py-8 px-12">
+          {/* Left side with login form */}
           <div className="w-full flex flex-col justify-center items-center lg:w-1/2">
-            <div className="w-2/3 mx-auto border border-border rounded-lg p-8 bg-card dark:bg-dark-800">
+            <div className="w-2/3 mx-auto rounded-lg p-8">
               <div className="flex justify-between items-center mb-8">
                 <h1 className="text-3xl font-bold text-foreground">Login</h1>
                 <button className="p-1 rounded-full hover:bg-secondary">
@@ -313,6 +232,106 @@ export default function LoginForm() {
               <p className="mt-4 text-xs text-muted-foreground">
                 © 2025 SwiftBoard Inc. All rights reserved.
               </p>
+            </div>
+          </div>
+
+          {/* Right side with professional features section */}
+          <div className="hidden lg:block w-1/2">
+            <div className="h-full flex flex-col p-8 bg-gradient-to-br from-blue-800 to-indigo-900 text-white rounded-xl">
+              <div className="mb-6">
+                <h1 className="text-3xl font-bold mb-4">
+                  Welcome back to SwiftBoard
+                </h1>
+                <p className="text-blue-100">
+                  Log in to access your workspace and continue managing your
+                  projects efficiently.
+                </p>
+              </div>
+
+              <div className="space-y-6 mt-4">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 bg-white bg-opacity-20 p-2 rounded-full">
+                    <Check className="h-5 w-5" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="font-semibold">Task & Subtask Management</h3>
+                    <p className="text-sm text-blue-100">
+                      Break down complex projects into manageable tasks and
+                      subtasks. Assign responsibilities, set deadlines, and
+                      track real-time progress.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 bg-white bg-opacity-20 p-2 rounded-full">
+                    <Users className="h-5 w-5" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="font-semibold">Seamless Collaboration</h3>
+                    <p className="text-sm text-blue-100">
+                      Foster teamwork with built-in chat, comments, and
+                      @mentions. Share files and provide feedback instantly.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 bg-white bg-opacity-20 p-2 rounded-full">
+                    <Clock className="h-5 w-5" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="font-semibold">
+                      Advanced Analytics & Reports
+                    </h3>
+                    <p className="text-sm text-blue-100">
+                      Gain deep insights into team performance, workload
+                      distribution, and project bottlenecks. Make data-driven
+                      decisions.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 bg-white bg-opacity-20 p-2 rounded-full">
+                    <Shield className="h-5 w-5" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="font-semibold">Enterprise-Grade Security</h3>
+                    <p className="text-sm text-blue-100">
+                      Your data is protected with end-to-end encryption and
+                      advanced security protocols that keep your work safe.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-auto">
+                <div className="bg-white bg-opacity-10 p-4 rounded-lg border border-blue-600">
+                  <div className="flex items-center mb-2">
+                    <Medal className="h-5 w-5 text-yellow-300 mr-2" />
+                    <h4 className="font-medium">Why teams choose SwiftBoard</h4>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mt-3">
+                    <div className="flex items-start">
+                      <Users className="h-4 w-4 text-blue-300 mt-0.5 mr-2" />
+                      <span className="text-sm">50,000+ active teams</span>
+                    </div>
+                    <div className="flex items-start">
+                      <Clock className="h-4 w-4 text-blue-300 mt-0.5 mr-2" />
+                      <span className="text-sm">99.9% uptime</span>
+                    </div>
+                    <div className="flex items-start">
+                      <Shield className="h-4 w-4 text-blue-300 mt-0.5 mr-2" />
+                      <span className="text-sm">SOC2 & GDPR compliant</span>
+                    </div>
+                    <div className="flex items-start">
+                      <Check className="h-4 w-4 text-blue-300 mt-0.5 mr-2" />
+                      <span className="text-sm">24/7 premium support</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

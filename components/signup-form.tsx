@@ -11,6 +11,9 @@ import {
   Check,
   ArrowLeft,
   HelpCircle,
+  Star,
+  Clock,
+  Shield,
 } from "lucide-react";
 import { FaGoogle, FaGithub, FaApple } from "react-icons/fa";
 import { Toast } from "./ui/toast";
@@ -197,13 +200,13 @@ export default function SignupForm() {
       <div className="flex flex-col h-screen overflow-hidden bg-[#0F172A]">
         <Navbar />
 
-        <div className="flex justify-center items-center flex-1">
+        <div className="flex justify-center items-center flex-1 py-8 px-12">
           {/* Left side: Background with content */}
-          <div className="hidden md:flex md:w-5/12 bg-gradient-to-br from-blue-800 to-indigo-900 text-white p-8 relative h-full">
+          <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-blue-800 to-indigo-900 text-white p-8 relative h-full rounded-2xl">
             <div className="flex flex-col h-full w-full">
               <div className="mb-8">
                 <h1 className="text-3xl font-bold mb-4">
-                  Join TaskFlow and transform your workflow
+                  Join Swiftboard and transform your workflow
                 </h1>
                 <p className="text-blue-100">
                   Create a free account and discover how our platform helps
@@ -250,6 +253,50 @@ export default function SignupForm() {
                     </p>
                   </div>
                 </div>
+
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 bg-white bg-opacity-20 p-2 rounded-full">
+                    <Clock className="h-5 w-5" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="font-semibold">Save Valuable Time</h3>
+                    <p className="text-sm text-blue-100">
+                      Automate routine tasks and focus on what truly matters
+                      with our smart workflow tools.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 bg-white bg-opacity-20 p-2 rounded-full">
+                    <Shield className="h-5 w-5" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="font-semibold">Enterprise-Grade Security</h3>
+                    <p className="text-sm text-blue-100">
+                      Your data is protected with end-to-end encryption and
+                      advanced security protocols.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 bg-white bg-opacity-10 p-4 rounded-lg border border-blue-600">
+                <div className="flex items-center mb-2">
+                  <Star className="h-5 w-5 text-yellow-300 mr-1" />
+                  <Star className="h-5 w-5 text-yellow-300 mr-1" />
+                  <Star className="h-5 w-5 text-yellow-300 mr-1" />
+                  <Star className="h-5 w-5 text-yellow-300 mr-1" />
+                  <Star className="h-5 w-5 text-yellow-300 mr-1" />
+                </div>
+                <p className="text-sm italic">
+                  &quot;Swiftboard has revolutionized how our team collaborates.
+                  We&apos;ve increased productivity by 35% since implementing
+                  it!&quot;
+                </p>
+                <p className="text-xs mt-2 font-semibold">
+                  — Sarah Johnson, Product Manager at TechCorp
+                </p>
               </div>
 
               <div className="mt-auto">
@@ -267,7 +314,7 @@ export default function SignupForm() {
           </div>
 
           {/* Right side: Form */}
-          <div className="w-full md:w-7/12 bg-[#0F172A] overflow-y-auto">
+          <div className="w-full md:w-1/2 bg-[#0F172A] overflow-y-auto">
             <div className="max-w-xl mx-auto px-6 py-8 h-full">
               <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold text-white">
