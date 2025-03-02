@@ -1,17 +1,22 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import nookies from "nookies";
 
-export async function POST(request: Request) {
-  const { email, name, password, confirmPassword } = await request.json();
+export async function POST(request: NextRequest) {
+  const cookies = nookies.get({ req: request });
+  const refreshToken = cookies.refresh_token;
+
+  if (!refreshToken) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/signup`,
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/refresh`,
     {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${refreshToken}`,
       },
-      body: JSON.stringify({ email, name, password, confirmPassword }),
     },
   );
 
@@ -26,18 +31,11 @@ export async function POST(request: Request) {
 
   const res = NextResponse.json(data);
 
-  // Set cookies
+  // Set the new access_token in cookies
   nookies.set({ res }, "access_token", data.accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    maxAge: 15 * 60, // 30 days
-    path: "/",
-  });
-
-  nookies.set({ res }, "refresh_token", data.refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 15 * 60, // 15 minutes
     path: "/",
   });
 

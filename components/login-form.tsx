@@ -53,7 +53,6 @@ export default function LoginForm() {
       setToastMessage({ title: "Login Failed", description: data.error });
       setToastOpen(true);
     } else {
-      console.log("Login successful:", data);
       setToastMessage({
         title: "Login Successful",
         description: "You have successfully logged in.",

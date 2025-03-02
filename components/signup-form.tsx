@@ -149,7 +149,6 @@ export default function SignupForm() {
         });
         setToastOpen(true);
       } else {
-        console.log("Signup successful:", data);
         setToastMessage({
           title: "Account Created",
           description:
@@ -665,7 +664,7 @@ export default function SignupForm() {
                   </Link>
                 </div>
                 <p className="mt-2">
-                  © 2025 TaskFlow Inc. All rights reserved.
+                  © 2025 Swiftboard Inc. All rights reserved.
                 </p>
               </div>
             </div>
