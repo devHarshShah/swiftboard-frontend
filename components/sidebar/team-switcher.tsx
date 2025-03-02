@@ -19,6 +19,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
+import { useModal } from "../modal-provider";
+
 function getTeamLogo(name: string) {
   return name.slice(0, 2).toUpperCase();
 }
@@ -36,6 +38,8 @@ export function TeamSwitcher({
   const [activeTeam, setActiveTeam] = React.useState(
     teams.length > 0 ? teams[0] : null,
   );
+
+  const { openModal } = useModal();
 
   // Function to handle creating a new team
   const handleCreateTeam = () => {
@@ -130,7 +134,9 @@ export function TeamSwitcher({
             )}
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={handleCreateTeam}
+              onClick={() =>
+                openModal("CREATE_USER", { onSubmit: handleCreateTeam })
+              }
               className="gap-2 p-2 font-medium"
             >
               <div className="flex size-6 items-center justify-center rounded-md border bg-background">
@@ -138,14 +144,6 @@ export function TeamSwitcher({
               </div>
               {teams.length > 0 ? "Create new team" : "Create your first team"}
             </DropdownMenuItem>
-            {teams.length === 0 && (
-              <DropdownMenuItem className="gap-2 p-2 text-xs text-muted-foreground">
-                <div className="pl-8">
-                  Teams help you organize your projects and collaborate with
-                  others
-                </div>
-              </DropdownMenuItem>
-            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

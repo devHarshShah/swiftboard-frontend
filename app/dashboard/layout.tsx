@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
-import BreadCrumbs from "@/components/breadcrumbs";
+import { AppSidebar } from "@/components/sidebar/app-sidebar";
+import BreadCrumbs from "@/components/sidebar/breadcrumbs";
 import { apiClient } from "@/lib/apiClient";
+import { ModalProvider } from "@/components/modal-provider";
+import ModalContainer from "@/components/modals/modal.container";
 
 export default function RootLayout({
   children,
@@ -48,11 +50,14 @@ export default function RootLayout({
 
   return (
     <SidebarProvider>
-      {user && <AppSidebar user={user} teams={teams} />}
-      <SidebarInset>
-        <BreadCrumbs />
-        <main className="w-full">{children}</main>
-      </SidebarInset>
+      <ModalProvider>
+        {user && <AppSidebar user={user} teams={teams} />}
+        <SidebarInset>
+          <BreadCrumbs />
+          <main className="w-full">{children}</main>
+        </SidebarInset>
+        <ModalContainer />
+      </ModalProvider>
     </SidebarProvider>
   );
 }

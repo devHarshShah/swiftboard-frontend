@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import nookies from "nookies";
 
 export async function POST(request: NextRequest) {
-  const cookies = nookies.get({ req: request });
-  const refreshToken = cookies.refresh_token;
+  const refreshToken = request.cookies.get("refresh_token")?.value;
 
   if (!refreshToken) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -33,12 +31,12 @@ export async function POST(request: NextRequest) {
 
   // Set the new access_token in cookies
 
-  nookies.set({ res }, "access_token", data.accessToken, {
-    maxAge: 15 * 60, // 15 minutes
+  res.cookies.set("access_token", data.accessToken, {
+    maxAge: 15 * 60, // 30 days
     path: "/",
   });
 
-  nookies.set({ res }, "refresh_token", data.refreshToken, {
+  res.cookies.set("refresh_token", data.refreshToken, {
     maxAge: 7 * 24 * 60 * 60, // 30 days
     path: "/",
   });
