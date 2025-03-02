@@ -4,7 +4,48 @@
 
 @layer base {
   :root {
-    /* Setting dark theme values as default */
+    /* Light theme values */
+    --background: 0 0% 100%; /* White */
+    --foreground: 240 10% 15%; /* Dark text */
+    --card: 0 0% 98%; /* #fafafa */
+    --card-foreground: 240 10% 15%;
+    --popover: 0 0% 98%;
+    --popover-foreground: 240 10% 15%;
+    --primary: 221.2 83.2% 53.3%; /* #3B82F6 - Blue button */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 240 5% 93%; /* #edecf5 */
+    --secondary-foreground: 240 5% 35%;
+    --muted: 240 5% 90%;
+    --muted-foreground: 240 5% 45%;
+    --accent: 240 10% 90%; /* Light accent */
+    --accent-foreground: 240 10% 25%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 240 10% 85%; /* #d9d8e6 */
+    --input: 240 10% 85%;
+    --ring: 221.2 83.2% 53.3%; /* Blue glow */
+    --radius: 0.5rem;
+
+    /* Chart colors - light theme */
+    --chart-1: 221.2 83.2% 50%; /* Blue */
+    --chart-2: 180 70% 45%;
+    --chart-3: 39 90% 50%;
+    --chart-4: 300 70% 50%;
+    --chart-5: 120 60% 50%;
+
+    /* Sidebar Colors - light theme */
+    --sidebar-background: var(--card);
+    --sidebar-foreground: var(--foreground);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--secondary);
+    --sidebar-accent-foreground: var(--secondary-foreground);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--ring);
+  }
+
+  .dark {
+    /* Dark theme values (your existing theme) */
     --background: 240 46% 10%; /* #0F0F23 */
     --foreground: 240 30% 90%; /* Light text */
     --card: 240 38% 15%; /* #1A1A35 */
@@ -24,20 +65,102 @@
     --border: 240 26% 27%; /* #313159 */
     --input: 240 26% 27%;
     --ring: 221.2 83.2% 53.3%; /* Blue glow */
-    --radius: 0.5rem;
 
-    /* Chart colors - using dark theme values by default */
+    /* Chart colors - dark theme */
     --chart-1: 221.2 83.2% 60%; /* Brighter blue */
     --chart-2: 180 100% 60%;
     --chart-3: 39 100% 60%;
     --chart-4: 300 100% 60%;
     --chart-5: 120 100% 60%;
+
+    /* Sidebar Colors - dark theme */
+    --sidebar-background: var(--card);
+    --sidebar-foreground: var(--foreground);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--secondary);
+    --sidebar-accent-foreground: var(--secondary-foreground);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--ring);
   }
 }
 
-/* Add a utility class for shadow glow effect mentioned in your component */
+/* Scrollbar customization */
 @layer utilities {
-  .shadow-glow {
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+  /* Thin scrollbar for both themes */
+  .scrollbar-custom {
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: rgba(155, 155, 155, 0.5) transparent; /* Firefox */
+  }
+
+  .scrollbar-custom::-webkit-scrollbar {
+    width: 4px; /* Width of the scrollbar */
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-track {
+    background: transparent; /* Track background */
+  }
+
+  /* Light theme scrollbar */
+  .scrollbar-custom::-webkit-scrollbar-thumb {
+    background-color: rgba(155, 155, 155, 0.5); /* Thumb color */
+    border-radius: 20px; /* Rounded corners */
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(155, 155, 155, 0.7); /* Thumb color on hover */
+  }
+
+  /* Dark theme scrollbar */
+  .dark .scrollbar-custom::-webkit-scrollbar-thumb {
+    background-color: rgba(
+      180,
+      180,
+      220,
+      0.5
+    ); /* Slightly bluish thumb for dark mode */
+    border-radius: 20px;
+  }
+
+  .dark .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(180, 180, 220, 0.7);
+  }
+
+  /* Hide scrollbar but maintain functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+
+  /* Show scrollbar on hover only */
+  .scrollbar-show-on-hover {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-show-on-hover::-webkit-scrollbar {
+    display: none;
+    width: 4px;
+  }
+
+  .scrollbar-show-on-hover:hover::-webkit-scrollbar {
+    display: block;
+  }
+
+  .scrollbar-show-on-hover:hover::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-show-on-hover:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(155, 155, 155, 0.5);
+    border-radius: 20px;
+  }
+
+  .dark .scrollbar-show-on-hover:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(180, 180, 220, 0.5);
   }
 }

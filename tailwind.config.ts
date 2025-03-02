@@ -50,19 +50,28 @@ export default {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
-        // New dark theme colors - can be accessed using dark:{class}
         dark: {
-          900: "#0F0F23", // Very dark blue-purple (background)
-          800: "#1A1A35", // Input background
-          700: "#252543", // Hover state
-          600: "#313159", // Border color
+          "600": "#313159",
+          "700": "#252543",
+          "800": "#1A1A35",
+          "900": "#0F0F23",
         },
         blue: {
-          300: "#8B8BCC", // Light blue text
-          400: "#A5B4FF", // Icons and links
-          500: "#60A5FA", // Button hover
-          600: "#3B82F6", // Primary button
-          800: "#1E40AF", // Focus ring
+          "300": "#8B8BCC",
+          "400": "#A5B4FF",
+          "500": "#60A5FA",
+          "600": "#3B82F6",
+          "800": "#1E40AF",
+        },
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar-background))",
+          foreground: "hsl(var(--sidebar-foreground))",
+          primary: "hsl(var(--sidebar-primary))",
+          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+          accent: "hsl(var(--sidebar-accent))",
+          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
+          border: "hsl(var(--sidebar-border))",
+          ring: "hsl(var(--sidebar-ring))",
         },
       },
       borderRadius: {
@@ -71,7 +80,7 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       boxShadow: {
-        glow: "0 0 15px rgba(59, 130, 246, 0.3)", // Subtle blue glow
+        glow: "0 0 15px rgba(59, 130, 246, 0.3)",
       },
     },
   },
