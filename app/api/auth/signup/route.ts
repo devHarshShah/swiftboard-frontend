@@ -28,16 +28,12 @@ export async function POST(request: Request) {
 
   // Set cookies
   nookies.set({ res }, "access_token", data.accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
     maxAge: 15 * 60, // 30 days
     path: "/",
   });
 
   nookies.set({ res }, "refresh_token", data.refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 7 * 24 * 60 * 60, // 30 days
     path: "/",
   });
 

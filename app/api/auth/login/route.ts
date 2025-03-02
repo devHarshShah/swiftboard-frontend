@@ -27,14 +27,12 @@ export async function POST(request: Request) {
 
   // Set cookies
   res.cookies.set("access_token", data.accessToken, {
-    httpOnly: true,
     maxAge: 15 * 60, // 30 days
     path: "/",
   });
 
   res.cookies.set("refresh_token", data.refreshToken, {
-    httpOnly: true,
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 7 * 24 * 60 * 60, // 30 days
     path: "/",
   });
 
