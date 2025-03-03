@@ -18,8 +18,8 @@ import {
 import { FaGoogle, FaGithub } from "react-icons/fa";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import { Toast } from "./ui/toast";
-import Navbar from "./navbar";
+import { Toast } from "../ui/toast";
+import Navbar from "../navbar";
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);

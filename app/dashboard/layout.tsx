@@ -7,13 +7,25 @@ import { apiClient } from "@/lib/apiClient";
 import { ModalProvider } from "@/components/modal-provider";
 import ModalContainer from "@/components/modals/modal.container";
 
+interface Team {
+  team: {
+    id: string;
+    name: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+  role: string;
+  status: string;
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const [user, setUser] = useState(null);
-  const [teams, setTeams] = useState([]);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [projects, setProjects] = useState([]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -48,10 +60,32 @@ export default function RootLayout({
     fetchTeamsData();
   }, []);
 
+  useEffect(() => {
+    const fetchProjectData = async () => {
+      try {
+        if (teams.length > 0) {
+          const projectsResponse = await apiClient(
+            `/api/teams/projects/${teams[0].team.id}`,
+          );
+          const projectsData = await projectsResponse.json();
+          if (projectsResponse.ok) {
+            setProjects(projectsData);
+          } else {
+            console.error("Failed to fetch projects data:", projectsData.error);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching projects data:", error);
+      }
+    };
+
+    fetchProjectData();
+  }, [teams]);
+
   return (
     <SidebarProvider>
       <ModalProvider>
-        {user && <AppSidebar user={user} teams={teams} />}
+        {user && <AppSidebar user={user} teams={teams} projects={projects} />}
         <SidebarInset>
           <BreadCrumbs />
           <main className="w-full">{children}</main>

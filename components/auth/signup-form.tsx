@@ -16,8 +16,8 @@ import {
   Shield,
 } from "lucide-react";
 import { FaGoogle, FaGithub, FaApple } from "react-icons/fa";
-import { Toast } from "./ui/toast";
-import Navbar from "./navbar";
+import { Toast } from "../ui/toast";
+import Navbar from "../navbar";
 
 export default function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);

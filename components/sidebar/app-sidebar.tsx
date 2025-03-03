@@ -25,6 +25,7 @@ import { NavProjects } from "@/components/sidebar/nav-projects";
 import { NavSecondary } from "@/components/sidebar/nav-secondary";
 import { NavUser } from "@/components/sidebar/nav-user";
 import { TeamSwitcher } from "./team-switcher";
+import { ProjectSwitcher } from "./project-switcher";
 import {
   Sidebar,
   SidebarContent,
@@ -287,11 +288,17 @@ const data = {
 export function AppSidebar({
   user,
   teams,
+  projects,
   ...props
 }: {
   user: { name: string; email: string; avatar: string };
   teams: {
     team: { id: string; name: string; createdAt: string; updatedAt: string };
+    role: string;
+    status: string;
+  }[];
+  projects: {
+    project: { id: string; name: string; createdAt: string; updatedAt: string };
     role: string;
     status: string;
   }[];
@@ -305,6 +312,9 @@ export function AppSidebar({
     >
       <SidebarHeader>
         <TeamSwitcher teams={teams} />
+        <div className="mt-2">
+          <ProjectSwitcher projects={projects} />
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
