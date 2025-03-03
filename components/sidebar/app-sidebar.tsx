@@ -290,7 +290,11 @@ export function AppSidebar({
   ...props
 }: {
   user: { name: string; email: string; avatar: string };
-  teams: { name: string; logo: React.ComponentType; plan: string }[];
+  teams: {
+    team: { id: string; name: string; createdAt: string; updatedAt: string };
+    role: string;
+    status: string;
+  }[];
 } & React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar

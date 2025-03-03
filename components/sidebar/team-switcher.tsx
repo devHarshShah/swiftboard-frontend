@@ -29,23 +29,28 @@ export function TeamSwitcher({
   teams,
 }: {
   teams: {
-    name: string;
-    logo?: React.ElementType;
-    plan: string;
+    team: {
+      id: string;
+      name: string;
+      createdAt: string;
+      updatedAt: string;
+    };
+    role: string;
+    status: string;
   }[];
 }) {
   const { isMobile } = useSidebar();
   const [activeTeam, setActiveTeam] = React.useState(
-    teams.length > 0 ? teams[0] : null,
+    teams.length > 0 ? teams[0].team : null,
   );
 
   const { openModal } = useModal();
 
   // Function to handle creating a new team
   const handleCreateTeam = () => {
-    // Here you would typically navigate to team creation page or open a modal
-    console.log("Create team clicked");
-    // Example: router.push("/teams/create") or openCreateTeamModal()
+    openModal("CREATE_USER", {
+      onSubmit: () => console.log("Create team clicked"),
+    });
   };
 
   return (
@@ -61,19 +66,21 @@ export function TeamSwitcher({
                 // Display active team if teams exist
                 <>
                   <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                    {activeTeam?.logo ? (
-                      <activeTeam.logo className="size-4" />
-                    ) : (
-                      <span className="text-xl font-bold">
-                        {getTeamLogo(activeTeam?.name || "")}
-                      </span>
-                    )}
+                    <span className="text-xl font-bold">
+                      {getTeamLogo(activeTeam?.name || "")}
+                    </span>
                   </div>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">
                       {activeTeam?.name}
                     </span>
-                    <span className="truncate text-xs">{activeTeam?.plan}</span>
+                    <span className="truncate text-xs">
+                      {
+                        teams.find(
+                          (teamData) => teamData.team.id === activeTeam?.id,
+                        )?.role
+                      }
+                    </span>
                   </div>
                 </>
               ) : (
@@ -104,22 +111,18 @@ export function TeamSwitcher({
             </DropdownMenuLabel>
             {teams.length > 0 ? (
               // Show existing teams
-              teams.map((team, index) => (
+              teams.map((teamData, index) => (
                 <DropdownMenuItem
-                  key={team.name}
-                  onClick={() => setActiveTeam(team)}
+                  key={teamData.team.id}
+                  onClick={() => setActiveTeam(teamData.team)}
                   className="gap-2 p-2"
                 >
                   <div className="flex size-6 items-center justify-center rounded-sm border">
-                    {team.logo ? (
-                      <team.logo className="size-4 shrink-0" />
-                    ) : (
-                      <span className="text-sm font-bold">
-                        {getTeamLogo(team.name)}
-                      </span>
-                    )}
+                    <span className="text-sm font-bold">
+                      {getTeamLogo(teamData.team.name)}
+                    </span>
                   </div>
-                  {team.name}
+                  {teamData.team.name}
                   <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
                 </DropdownMenuItem>
               ))
@@ -134,9 +137,7 @@ export function TeamSwitcher({
             )}
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() =>
-                openModal("CREATE_USER", { onSubmit: handleCreateTeam })
-              }
+              onClick={handleCreateTeam}
               className="gap-2 p-2 font-medium"
             >
               <div className="flex size-6 items-center justify-center rounded-md border bg-background">

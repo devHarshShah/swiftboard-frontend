@@ -1,0 +1,34 @@
+import { NextRequest, NextResponse } from "next/server";
+
+export async function POST(request: NextRequest) {
+  const accessToken = request.cookies.get("access_token")?.value;
+
+  if (!accessToken) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { name, emails } = await request.json();
+
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/teams`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name, emails }),
+    },
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    return NextResponse.json(
+      { error: data.message },
+      { status: response.status },
+    );
+  }
+
+  return NextResponse.json(data);
+}
