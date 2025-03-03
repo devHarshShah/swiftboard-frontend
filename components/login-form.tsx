@@ -58,6 +58,9 @@ export default function LoginForm() {
         description: "You have successfully logged in.",
       });
       setToastOpen(true);
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 2000);
     }
   };
 

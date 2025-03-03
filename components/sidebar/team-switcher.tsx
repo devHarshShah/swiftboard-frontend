@@ -19,6 +19,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
+import { AvatarFallback, Avatar } from "../ui/avatar";
+
 import { useModal } from "../modal-provider";
 
 function getTeamLogo(name: string) {
@@ -44,6 +46,12 @@ export function TeamSwitcher({
     teams.length > 0 ? teams[0].team : null,
   );
 
+  React.useEffect(() => {
+    if (teams.length > 0) {
+      setActiveTeam(teams[0].team);
+    }
+  }, [teams]);
+
   const { openModal } = useModal();
 
   // Function to handle creating a new team
@@ -65,11 +73,12 @@ export function TeamSwitcher({
               {teams.length > 0 ? (
                 // Display active team if teams exist
                 <>
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                    <span className="text-xl font-bold">
+                  <Avatar className="h-8 w-8 rounded-lg">
+                    <AvatarFallback className="rounded-lg">
                       {getTeamLogo(activeTeam?.name || "")}
-                    </span>
-                  </div>
+                    </AvatarFallback>
+                  </Avatar>
+
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">
                       {activeTeam?.name}
@@ -117,11 +126,11 @@ export function TeamSwitcher({
                   onClick={() => setActiveTeam(teamData.team)}
                   className="gap-2 p-2"
                 >
-                  <div className="flex size-6 items-center justify-center rounded-sm border">
-                    <span className="text-sm font-bold">
+                  <Avatar className="h-8 w-8 rounded-lg">
+                    <AvatarFallback className="rounded-lg">
                       {getTeamLogo(teamData.team.name)}
-                    </span>
-                  </div>
+                    </AvatarFallback>
+                  </Avatar>
                   {teamData.team.name}
                   <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
                 </DropdownMenuItem>
