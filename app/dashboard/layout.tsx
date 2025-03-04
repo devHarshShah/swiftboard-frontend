@@ -18,6 +18,14 @@ interface Team {
   status: string;
 }
 
+interface Project {
+  id: string;
+  name: string;
+  teamId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -25,7 +33,7 @@ export default function RootLayout({
 }>) {
   const [user, setUser] = useState(null);
   const [teams, setTeams] = useState<Team[]>([]);
-  const [projects, setProjects] = useState([]);
+  const [projects, setProjects] = useState<Project[]>([]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -69,7 +77,7 @@ export default function RootLayout({
           );
           const projectsData = await projectsResponse.json();
           if (projectsResponse.ok) {
-            setProjects(projectsData);
+            setProjects(projectsData.projects);
           } else {
             console.error("Failed to fetch projects data:", projectsData.error);
           }

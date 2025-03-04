@@ -56,7 +56,7 @@ export function TeamSwitcher({
 
   // Function to handle creating a new team
   const handleCreateTeam = () => {
-    openModal("CREATE_USER", {
+    openModal("CREATE_TEAM", {
       onSubmit: () => console.log("Create team clicked"),
     });
   };

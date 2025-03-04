@@ -1,6 +1,10 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
-type ModalType = "CREATE_USER" | "EDIT_USER" | "DELETE_CONFIRMATION" | null;
+type ModalType =
+  | "CREATE_TEAM"
+  | "CREATE_PROJECT"
+  | "DELETE_CONFIRMATION"
+  | null;
 
 interface ModalContextType {
   modalType: ModalType;

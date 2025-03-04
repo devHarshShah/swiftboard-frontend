@@ -31,24 +31,21 @@ export function ProjectSwitcher({
   projects,
 }: {
   projects: {
-    project: {
-      id: string;
-      name: string;
-      createdAt: string;
-      updatedAt: string;
-    };
-    role: string;
-    status: string;
+    id: string;
+    name: string;
+    teamId: string;
+    createdAt: string;
+    updatedAt: string;
   }[];
 }) {
   const { isMobile } = useSidebar();
   const [activeProject, setActiveProject] = React.useState(
-    projects.length > 0 ? projects[0].project : null,
+    projects.length > 0 ? projects[0] : null,
   );
 
   React.useEffect(() => {
     if (projects.length > 0) {
-      setActiveProject(projects[0].project);
+      setActiveProject(projects[0]);
     }
   }, [projects]);
 
@@ -56,7 +53,7 @@ export function ProjectSwitcher({
 
   // Function to handle creating a new project
   const handleCreateProject = () => {
-    openModal("CREATE_USER", {
+    openModal("CREATE_PROJECT", {
       onSubmit: () => console.log("Create project clicked"),
     });
   };
@@ -82,14 +79,6 @@ export function ProjectSwitcher({
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">
                       {activeProject?.name}
-                    </span>
-                    <span className="truncate text-xs">
-                      {
-                        projects.find(
-                          (projectData) =>
-                            projectData.project.id === activeProject?.id,
-                        )?.role
-                      }
                     </span>
                   </div>
                 </>
@@ -121,18 +110,18 @@ export function ProjectSwitcher({
             </DropdownMenuLabel>
             {projects.length > 0 ? (
               // Show existing projects
-              projects.map((projectData, index) => (
+              projects.map((project, index) => (
                 <DropdownMenuItem
-                  key={projectData.project.id}
-                  onClick={() => setActiveProject(projectData.project)}
+                  key={project.id}
+                  onClick={() => setActiveProject(project)}
                   className="gap-2 p-2"
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
                     <AvatarFallback className="rounded-lg">
-                      {getProjectLogo(projectData.project.name)}
+                      {getProjectLogo(project.name)}
                     </AvatarFallback>
                   </Avatar>
-                  {projectData.project.name}
+                  {project.name}
                   <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
                 </DropdownMenuItem>
               ))

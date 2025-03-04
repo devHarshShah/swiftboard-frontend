@@ -298,9 +298,11 @@ export function AppSidebar({
     status: string;
   }[];
   projects: {
-    project: { id: string; name: string; createdAt: string; updatedAt: string };
-    role: string;
-    status: string;
+    id: string;
+    name: string;
+    teamId: string;
+    createdAt: string;
+    updatedAt: string;
   }[];
 } & React.ComponentProps<typeof Sidebar>) {
   return (
