@@ -43,7 +43,7 @@ const data = {
       items: [
         {
           title: "Kanban Boards",
-          url: "#",
+          url: "/dashboard/kanbanboard",
         },
         {
           title: "Gantt Charts",

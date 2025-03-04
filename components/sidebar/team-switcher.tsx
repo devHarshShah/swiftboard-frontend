@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { ChevronsUpDown, Plus, Users } from "lucide-react";
+import Cookies from "js-cookie";
 
 import {
   DropdownMenu,
@@ -49,8 +50,19 @@ export function TeamSwitcher({
   React.useEffect(() => {
     if (teams.length > 0) {
       setActiveTeam(teams[0].team);
+      Cookies.set("activeTeamId", teams[0].team.id);
     }
   }, [teams]);
+
+  const handleTeamSelect = (team: {
+    id: string;
+    name: string;
+    createdAt: string;
+    updatedAt: string;
+  }) => {
+    setActiveTeam(team);
+    Cookies.set("activeTeamId", team.id);
+  };
 
   const { openModal } = useModal();
 
@@ -123,7 +135,7 @@ export function TeamSwitcher({
               teams.map((teamData, index) => (
                 <DropdownMenuItem
                   key={teamData.team.id}
-                  onClick={() => setActiveTeam(teamData.team)}
+                  onClick={() => handleTeamSelect(teamData.team)}
                   className="gap-2 p-2"
                 >
                   <Avatar className="h-8 w-8 rounded-lg">

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { ChevronsUpDown, Plus, Users } from "lucide-react";
+import Cookies from "js-cookie";
 
 import {
   DropdownMenu,
@@ -46,8 +47,20 @@ export function ProjectSwitcher({
   React.useEffect(() => {
     if (projects.length > 0) {
       setActiveProject(projects[0]);
+      Cookies.set("activeProjectId", projects[0].id);
     }
   }, [projects]);
+
+  const handleProjectSelect = (project: {
+    id: string;
+    name: string;
+    teamId: string;
+    createdAt: string;
+    updatedAt: string;
+  }) => {
+    setActiveProject(project);
+    Cookies.set("activeProjectId", project.id);
+  };
 
   const { openModal } = useModal();
 
@@ -113,7 +126,7 @@ export function ProjectSwitcher({
               projects.map((project, index) => (
                 <DropdownMenuItem
                   key={project.id}
-                  onClick={() => setActiveProject(project)}
+                  onClick={() => handleProjectSelect(project)}
                   className="gap-2 p-2"
                 >
                   <Avatar className="h-8 w-8 rounded-lg">

@@ -27,9 +27,12 @@ const CreateProjectModal: React.FC = () => {
   useEffect(() => {
     const fetchTeams = async () => {
       try {
-        const response = await apiClient("/api/project/team", {
-          method: "GET",
-        });
+        const response = await apiClient(
+          "/api/project/team/?filterByRole=true",
+          {
+            method: "GET",
+          },
+        );
         const data = await response.json();
         if (response.ok) {
           setTeams(data);
