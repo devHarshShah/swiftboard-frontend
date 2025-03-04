@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { projectId: string; taskId: string } },
+  { params }: { params: Promise<{ projectId: string; taskId: string }> },
 ) {
-  const { projectId, taskId } = await params; // Extract projectId and taskId from URL params
+  // Await the params Promise
+  const { projectId, taskId } = await params;
 
   if (!projectId || !taskId) {
     return NextResponse.json(
@@ -19,28 +20,36 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { status } = await request.json();
+  try {
+    const { status } = await request.json();
 
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL}/projects/${projectId}/tasks/${taskId}/move`,
-    {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/projects/${projectId}/tasks/${taskId}/move`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status }),
       },
-      body: JSON.stringify({ status }),
-    },
-  );
+    );
 
-  const data = await response.json();
+    const data = await response.json();
 
-  if (!response.ok) {
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.message },
+        { status: response.status },
+      );
+    }
+
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error("Error moving task:", error);
     return NextResponse.json(
-      { error: data.message },
-      { status: response.status },
+      { error: "Internal Server Error" },
+      { status: 500 },
     );
   }
-
-  return NextResponse.json(data);
 }

@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { teamId: string } },
+  { params }: { params: Promise<{ teamId: string }> },
 ) {
-  // Correctly access teamId directly from params
-  const teamId = params.teamId;
+  // Await the params Promise
+  const { teamId } = await params;
 
   if (!teamId) {
     return NextResponse.json({ error: "Team ID is required" }, { status: 400 });

@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { projectId: string } },
+  { params }: { params: Promise<{ projectId: string }> },
 ) {
-  const { projectId } = await params; // Extract projectId from URL params
+  // Await the params Promise
+  const { projectId } = await params;
 
   if (!projectId) {
     return NextResponse.json(
@@ -19,34 +20,43 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL}/projects/${projectId}/tasks`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/projects/${projectId}/tasks`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
       },
-    },
-  );
+    );
 
-  const data = await response.json();
+    const data = await response.json();
 
-  if (!response.ok) {
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.message },
+        { status: response.status },
+      );
+    }
+
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error("Error fetching project tasks:", error);
     return NextResponse.json(
-      { error: data.message },
-      { status: response.status },
+      { error: "Internal Server Error" },
+      { status: 500 },
     );
   }
-
-  return NextResponse.json(data);
 }
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { projectId: string } },
+  { params }: { params: Promise<{ projectId: string }> },
 ) {
-  const { projectId } = await params; // Extract projectId from URL params
+  // Await the params Promise
+  const { projectId } = await params;
 
   if (!projectId) {
     return NextResponse.json(
@@ -61,28 +71,36 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { name, description, status, assignedUserIds } = await request.json();
+  try {
+    const { name, description, status, assignedUserIds } = await request.json();
 
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL}/projects/${projectId}/tasks`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/projects/${projectId}/tasks`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, description, status, assignedUserIds }),
       },
-      body: JSON.stringify({ name, description, status, assignedUserIds }),
-    },
-  );
+    );
 
-  const data = await response.json();
+    const data = await response.json();
 
-  if (!response.ok) {
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.message },
+        { status: response.status },
+      );
+    }
+
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error("Error creating project task:", error);
     return NextResponse.json(
-      { error: data.message },
-      { status: response.status },
+      { error: "Internal Server Error" },
+      { status: 500 },
     );
   }
-
-  return NextResponse.json(data);
 }
