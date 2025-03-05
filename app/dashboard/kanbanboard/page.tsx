@@ -3,8 +3,20 @@ import React, { useState, useEffect, useCallback } from "react";
 import Cookies from "js-cookie";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Move, MoreVertical } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Move,
+  MoreVertical,
+  AlertCircleIcon,
+} from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +43,7 @@ import {
   User,
   NewTaskData,
   GroupedTasks,
+  statusConfig,
 } from "@/app/types/kanban.types";
 
 const KanbanBoard: React.FC = () => {
@@ -43,36 +56,12 @@ const KanbanBoard: React.FC = () => {
     name: "",
     description: "",
     userIds: [],
+    blockedBy: [],
   });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const projectId = Cookies.get("activeProjectId");
   const teamId = Cookies.get("activeTeamId");
-
-  // Status configuration with theme-aware styling
-  const statusConfig = {
-    [TaskStatus.TODO]: {
-      label: "To Do",
-      bgColor: "bg-chart-1/10 dark:bg-chart-1/20",
-      textColor: "text-chart-1 dark:text-chart-1",
-      borderColor: "border-chart-1/30 dark:border-chart-1/40",
-      hoverColor: "hover:bg-chart-1/20 dark:hover:bg-chart-1/30",
-    },
-    [TaskStatus.IN_PROGRESS]: {
-      label: "In Progress",
-      bgColor: "bg-chart-3/10 dark:bg-chart-3/20",
-      textColor: "text-chart-3 dark:text-chart-3",
-      borderColor: "border-chart-3/30 dark:border-chart-3/40",
-      hoverColor: "hover:bg-chart-3/20 dark:hover:bg-chart-3/30",
-    },
-    [TaskStatus.DONE]: {
-      label: "Completed",
-      bgColor: "bg-chart-5/10 dark:bg-chart-5/20",
-      textColor: "text-chart-5 dark:text-chart-5",
-      borderColor: "border-chart-5/30 dark:border-chart-5/40",
-      hoverColor: "hover:bg-chart-5/20 dark:hover:bg-chart-5/30",
-    },
-  };
 
   const fetchUsers = useCallback(async () => {
     if (!teamId) return;
@@ -115,6 +104,13 @@ const KanbanBoard: React.FC = () => {
     }
   }, [projectId]);
 
+  const getUsernameFromEmail = (user: User) => {
+    const username = user.name
+      ? user.name.replace(/\s+/g, "").toLowerCase()
+      : user.email.split("@")[0];
+    return `@${username}`;
+  };
+
   // Create a new task
   const createTask = async () => {
     if (!newTask.name.trim() || !projectId) return;
@@ -126,12 +122,13 @@ const KanbanBoard: React.FC = () => {
           name: newTask.name,
           description: newTask.description,
           status: TaskStatus.TODO,
-          userIds: newTask.userIds || [], // Send selected user IDs
+          assignedUserIds: newTask.userIds || [], // Send selected user IDs
+          blockedTaskIds: newTask.blockedBy.map((task) => task.id), // Send blocked task IDs
         }),
       });
 
       fetchTasks(); // Refresh tasks
-      setNewTask({ name: "", description: "", userIds: [] });
+      setNewTask({ name: "", description: "", userIds: [], blockedBy: [] });
       setIsDialogOpen(false);
     } catch (error) {
       console.error("Failed to create task", error);
@@ -183,6 +180,25 @@ const KanbanBoard: React.FC = () => {
     });
   };
 
+  const toggleTaskSelection = (taskId: string) => {
+    setNewTask((prev) => {
+      const currentBlockedBy = prev.blockedBy || [];
+      const updatedBlockedBy = currentBlockedBy.some(
+        (task) => task.id === taskId,
+      )
+        ? currentBlockedBy.filter((task) => task.id !== taskId)
+        : [
+            ...currentBlockedBy,
+            tasks[TaskStatus.TODO].find((task) => task.id === taskId)!,
+          ];
+
+      return {
+        ...prev,
+        blockedBy: updatedBlockedBy,
+      };
+    });
+  };
+
   useEffect(() => {
     fetchTasks();
     fetchUsers();
@@ -227,70 +243,134 @@ const KanbanBoard: React.FC = () => {
 
         <div className="space-y-3 overflow-y-auto scrollbar-custom">
           {tasks[status].map((task) => (
-            <Card
-              key={task.id}
-              className={cn(
-                "border transition-all duration-200 ease-in-out",
-                config.borderColor,
-                config.hoverColor,
-                "bg-card dark:bg-card/50",
-              )}
-            >
-              <CardHeader className="p-4 pb-2">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg font-medium text-foreground">
-                    {task.name}
-                  </CardTitle>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {Object.values(TaskStatus)
-                        .filter((s) => s !== task.status)
-                        .map((newStatus) => (
-                          <DropdownMenuItem
-                            key={newStatus}
-                            onSelect={() =>
-                              moveTask(task, newStatus as TaskStatusKey)
-                            }
-                            className="cursor-pointer"
-                          >
-                            <Move className="mr-2 h-4 w-4" />
-                            Move to {statusConfig[newStatus].label}
-                          </DropdownMenuItem>
+            <TooltipProvider key={task.id}>
+              <Card
+                className={cn(
+                  "border transition-all duration-200 ease-in-out",
+                  config.borderColor,
+                  config.hoverColor,
+                  "bg-card dark:bg-card/50 shadow-sm hover:shadow-md",
+                  task.blockedBy?.length > 0 && "border-destructive/50",
+                )}
+              >
+                <CardHeader className="p-4 pb-2">
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="text-lg font-semibold text-foreground truncate max-w-[80%]">
+                      {task.name}
+                    </CardTitle>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {Object.values(TaskStatus)
+                          .filter((s) => s !== task.status)
+                          .map((newStatus) => (
+                            <DropdownMenuItem
+                              key={newStatus}
+                              onSelect={() =>
+                                moveTask(task, newStatus as TaskStatusKey)
+                              }
+                              className="cursor-pointer"
+                            >
+                              <Move className="mr-2 h-4 w-4" />
+                              Move to {statusConfig[newStatus].label}
+                            </DropdownMenuItem>
+                          ))}
+                        <DropdownMenuItem
+                          onSelect={() => deleteTask(task.id)}
+                          className="text-destructive cursor-pointer focus:bg-destructive/10"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                  {task.description && (
+                    <p className="text-sm text-muted-foreground mb-3">
+                      {task.description}
+                    </p>
+                  )}
+
+                  {task.taskAssignments.length > 0 && (
+                    <div className="flex items-center text-sm mb-3 flex-wrap gap-2">
+                      <span className="font-medium text-foreground mr-2">
+                        Assigned To
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {task.taskAssignments.map((assignment) => (
+                          <Tooltip key={assignment.id}>
+                            <TooltipTrigger asChild>
+                              <div className="inline-flex items-center bg-secondary text-secondary-foreground px-2.5 py-1 rounded-full text-xs font-medium cursor-default">
+                                {getUsernameFromEmail(assignment.user)}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">{assignment.user.email}</p>
+                            </TooltipContent>
+                          </Tooltip>
                         ))}
-                      <DropdownMenuItem
-                        onSelect={() => deleteTask(task.id)}
-                        className="text-destructive cursor-pointer focus:bg-destructive/10"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4 pt-0 text-sm text-muted-foreground">
-                {task.description}
-                <div className="mt-2">
-                  <strong>Assigned to:</strong>
-                  <ul className="list-disc list-inside">
-                    {task.taskAssignments.map((assignment) => (
-                      <li key={assignment.id}>
-                        {assignment.user.name} ({assignment.user.email})
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
+                      </div>
+                    </div>
+                  )}
+
+                  {task.blockedBy && task.blockedBy.length > 0 && (
+                    <div className="flex items-center text-sm mb-3 flex-wrap gap-2 text-destructive">
+                      <div className="flex items-center">
+                        <AlertCircleIcon className="h-4 w-4 mr-2" />
+                        <span className="font-medium mr-2">Blocked By</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {task.blockedBy.map((blockerTask) => (
+                          <Tooltip key={blockerTask.id}>
+                            <TooltipTrigger asChild>
+                              <div className="inline-flex items-center bg-destructive/10 text-destructive px-2.5 py-1 rounded-full text-xs font-medium cursor-default">
+                                #{blockerTask.name}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">{blockerTask.name}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {task.blocking && task.blocking.length > 0 && (
+                    <div className="flex items-center text-sm mb-3 flex-wrap gap-2 text-warning">
+                      <div className="flex items-center">
+                        <AlertCircleIcon className="h-4 w-4 mr-2" />
+                        <span className="font-medium mr-2">Blocking</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {task.blocking.map((blockedTask) => (
+                          <Tooltip key={blockedTask.id}>
+                            <TooltipTrigger asChild>
+                              <div className="inline-flex items-center bg-warning/10 text-warning px-2.5 py-1 rounded-full text-xs font-medium cursor-default">
+                                #{blockedTask.name}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">{blockedTask.name}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TooltipProvider>
           ))}
         </div>
       </div>
@@ -361,6 +441,27 @@ const KanbanBoard: React.FC = () => {
                       className="text-sm font-normal"
                     >
                       {user.name} ({user.email})
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label className="text-right">Blocked By: </Label>
+              <div className="col-span-3 space-y-2">
+                {tasks["TODO"].map((task: Task) => (
+                  <div key={task.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`task-${task.id}`}
+                      checked={newTask.blockedBy.some((t) => t.id === task.id)}
+                      onCheckedChange={() => toggleTaskSelection(task.id)}
+                    />
+                    <Label
+                      htmlFor={`task-${task.id}`}
+                      className="text-sm font-normal"
+                    >
+                      {task.name}
                     </Label>
                   </div>
                 ))}

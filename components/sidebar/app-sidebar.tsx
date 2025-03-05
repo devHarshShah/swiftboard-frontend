@@ -46,10 +46,6 @@ const data = {
           url: "/dashboard/kanbanboard",
         },
         {
-          title: "Gantt Charts",
-          url: "#",
-        },
-        {
           title: "Task Lists",
           url: "#",
         },

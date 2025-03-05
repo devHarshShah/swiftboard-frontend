@@ -27,12 +27,15 @@ export interface Task {
   description: string;
   status: TaskStatusKey;
   taskAssignments: TaskAssignment[];
+  blockedBy: Task[];
+  blocking: Task[];
 }
 
 export interface NewTaskData {
   name: string;
   description: string;
   userIds: string[];
+  blockedBy: Task[];
 }
 
 export interface GroupedTasks {

@@ -72,7 +72,8 @@ export async function POST(
   }
 
   try {
-    const { name, description, status, assignedUserIds } = await request.json();
+    const { name, description, status, assignedUserIds, blockedTaskIds } =
+      await request.json();
 
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}/projects/${projectId}/tasks`,
@@ -82,7 +83,13 @@ export async function POST(
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name, description, status, assignedUserIds }),
+        body: JSON.stringify({
+          name,
+          description,
+          status,
+          assignedUserIds,
+          blockedTaskIds,
+        }),
       },
     );
 

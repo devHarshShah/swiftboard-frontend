@@ -21,6 +21,8 @@
     --accent-foreground: 240 10% 25%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
+    --warning: 39 90% 50%; /* Yellow warning */
+    --warning-foreground: 240 10% 15%;
     --border: 240 10% 85%; /* #d9d8e6 */
     --input: 240 10% 85%;
     --ring: 221.2 83.2% 53.3%; /* Blue glow */
@@ -62,6 +64,8 @@
     --accent-foreground: 240 40% 90%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
+    --warning: 39 90% 50%; /* Yellow warning */
+    --warning-foreground: 240 30% 90%;
     --border: 240 26% 27%; /* #313159 */
     --input: 240 26% 27%;
     --ring: 221.2 83.2% 53.3%; /* Blue glow */
