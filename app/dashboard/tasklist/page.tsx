@@ -68,6 +68,7 @@ import {
   statusConfig,
   User,
 } from "@/app/types/kanban.types";
+import { DateTimePicker } from "@/components/ui/date-timepicker";
 
 // Extended type to include additional properties for table rendering
 interface ExtendedTask extends Task {
@@ -695,6 +696,31 @@ const TaskListPage: React.FC = () => {
                 })}
               </SelectContent>
             </Select>
+          );
+        },
+      },
+      {
+        accessorKey: "dueDate",
+        header: "Due Date",
+        cell: ({ row }) => {
+          const task = row.original;
+          const dueDate = task.dueDate;
+
+          if (task.isEditing) {
+            return (
+              <DateTimePicker
+                dueDate={dueDate}
+                onDateChange={(date) => updateEditingTask("dueDate", date)}
+              />
+            );
+          }
+
+          return dueDate ? (
+            <div className="text-sm" onDoubleClick={() => startEditing(task)}>
+              {new Date(dueDate).toLocaleString()}
+            </div>
+          ) : (
+            <span className="text-sm text-gray-500 italic">Unassigned</span>
           );
         },
       },
