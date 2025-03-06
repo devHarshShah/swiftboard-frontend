@@ -24,6 +24,8 @@ import { AvatarFallback, Avatar } from "../ui/avatar";
 
 import { useModal } from "../modal-provider";
 
+import { useRouter } from "next/navigation";
+
 function getProjectLogo(name: string) {
   return name.slice(0, 2).toUpperCase();
 }
@@ -44,6 +46,8 @@ export function ProjectSwitcher({
     projects.length > 0 ? projects[0] : null,
   );
 
+  const router = useRouter();
+
   React.useEffect(() => {
     if (projects.length > 0) {
       setActiveProject(projects[0]);
@@ -60,6 +64,7 @@ export function ProjectSwitcher({
   }) => {
     setActiveProject(project);
     Cookies.set("activeProjectId", project.id);
+    router.refresh();
   };
 
   const { openModal } = useModal();

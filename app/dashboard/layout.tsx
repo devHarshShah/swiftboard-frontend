@@ -6,6 +6,7 @@ import BreadCrumbs from "@/components/sidebar/breadcrumbs";
 import { apiClient } from "@/lib/apiClient";
 import { ModalProvider } from "@/components/modal-provider";
 import ModalContainer from "@/components/modals/modal.container";
+import Cookies from "js-cookie";
 
 interface Team {
   team: {
@@ -34,6 +35,8 @@ export default function RootLayout({
   const [user, setUser] = useState(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [activeProject, setActiveProject] = useState<Project | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -89,6 +92,32 @@ export default function RootLayout({
 
     fetchProjectData();
   }, [teams]);
+
+  useEffect(() => {
+    const fetchActiveProject = async () => {
+      const activeProjectId = Cookies.get("activeProjectId");
+      if (activeProjectId) {
+        try {
+          const projectResponse = await apiClient(
+            `/api/project/${activeProjectId}`,
+          );
+          const projectData = await projectResponse.json();
+          if (projectResponse.ok) {
+            setActiveProject(projectData.project);
+          } else {
+            console.error(
+              "Failed to fetch active project data:",
+              projectData.error,
+            );
+          }
+        } catch (error) {
+          console.error("Error fetching active project data:", error);
+        }
+      }
+    };
+
+    fetchActiveProject();
+  }, []);
 
   return (
     <SidebarProvider>

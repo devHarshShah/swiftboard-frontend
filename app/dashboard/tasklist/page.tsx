@@ -775,7 +775,7 @@ const TaskListPage: React.FC = () => {
                             variant="outline"
                             className="bg-red-50 text-red-700 border-red-200 px-2 py-1 hover:bg-red-100 transition-colors"
                           >
-                            <div className="flex items-center">
+                            <div className="flex items-center text-left">
                               <AlertCircleIcon className="h-3 w-3 mr-1" />
                               {blockerTask.name}
                             </div>
@@ -825,7 +825,7 @@ const TaskListPage: React.FC = () => {
                         variant="outline"
                         className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100 transition-colors"
                       >
-                        <div className="flex items-center">
+                        <div className="flex items-center text-left">
                           <AlertCircleIcon className="h-3 w-3 mr-1" />
                           {blockerTask.name}
                         </div>
@@ -870,7 +870,7 @@ const TaskListPage: React.FC = () => {
                           variant="outline"
                           className="bg-amber-100 text-amber-700 border-amber-200"
                         >
-                          <div className="flex items-center">
+                          <div className="flex items-center text-left">
                             <AlertCircleIcon className="h-3 w-3 mr-1" />
                             {blockingTask.name}
                           </div>
@@ -912,7 +912,7 @@ const TaskListPage: React.FC = () => {
                       <TooltipTrigger>
                         <Badge
                           variant="outline"
-                          className="bg-amber-100 text-amber-700 border-amber-200"
+                          className="bg-amber-100 text-amber-700 border-amber-200 text-left"
                         >
                           <AlertCircleIcon className="h-3 w-3 mr-1" />
                           {blockingTask.name}
