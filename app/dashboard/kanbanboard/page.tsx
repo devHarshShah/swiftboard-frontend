@@ -46,6 +46,7 @@ import {
   GroupedTasks,
   statusConfig,
 } from "@/app/types/kanban.types";
+import { DateTimePicker } from "@/components/ui/date-timepicker";
 
 const KanbanBoard: React.FC = () => {
   const [tasks, setTasks] = useState<GroupedTasks>({
@@ -56,6 +57,8 @@ const KanbanBoard: React.FC = () => {
   const [newTask, setNewTask] = useState<NewTaskData>({
     name: "",
     description: "",
+    dueDate: new Date(),
+    expectedHours: 0,
     userIds: [],
     blockedBy: [],
   });
@@ -66,6 +69,13 @@ const KanbanBoard: React.FC = () => {
   const [blockingTaskSearchQuery, setBlockingTaskSearchQuery] = useState("");
   const projectId = Cookies.get("activeProjectId");
   const teamId = Cookies.get("activeTeamId");
+
+  const handleDateChange = (date: Date) => {
+    setNewTask((prev) => ({
+      ...prev,
+      dueDate: date,
+    }));
+  };
 
   const fetchUsers = useCallback(async () => {
     if (!teamId) return;
@@ -118,11 +128,19 @@ const KanbanBoard: React.FC = () => {
           status: TaskStatus.TODO,
           assignedUserIds: newTask.userIds || [],
           blockedTaskIds: newTask.blockedBy.map((task) => task.id),
+          dueDate: newTask.dueDate,
         }),
       });
 
       fetchTasks();
-      setNewTask({ name: "", description: "", userIds: [], blockedBy: [] });
+      setNewTask({
+        name: "",
+        description: "",
+        dueDate: new Date(),
+        expectedHours: 0,
+        userIds: [],
+        blockedBy: [],
+      });
       setIsAddingTask(false);
       setUserSearchQuery("");
       setBlockingTaskSearchQuery("");
@@ -179,6 +197,7 @@ const KanbanBoard: React.FC = () => {
           description: taskToUpdate.description,
           assignedUserIds: taskToUpdate.taskAssignments.map((a) => a.user.id),
           blockedTaskIds: taskToUpdate.blockedBy?.map((task) => task.id) || [],
+          dueDate: taskToUpdate.dueDate,
         }),
       });
 
@@ -411,6 +430,8 @@ const KanbanBoard: React.FC = () => {
                     className="w-full min-h-[100px]"
                   />
 
+                  <DateTimePicker onDateChange={handleDateChange} />
+
                   {/* User Assignment */}
                   <div>
                     <Label className="mb-2 block">Assign Users</Label>
@@ -529,6 +550,15 @@ const KanbanBoard: React.FC = () => {
                           )
                         }
                         className="w-full min-h-[100px]"
+                      />
+
+                      <DateTimePicker
+                        onDateChange={(date) =>
+                          setEditingTask((prev) =>
+                            prev ? { ...prev, dueDate: date } : null,
+                          )
+                        }
+                        dueDate={editingTask.dueDate}
                       />
 
                       {/* User Assignment for Editing */}
@@ -656,6 +686,15 @@ const KanbanBoard: React.FC = () => {
                         <p className="text-sm text-muted-foreground mb-3">
                           {task.description}
                         </p>
+                      )}
+
+                      {task.dueDate && (
+                        <div className="flex items-center text-sm mb-3">
+                          <Label className="mr-2">Due Date</Label>
+                          <span className="font-medium text-muted-foreground">
+                            {new Date(task.dueDate).toLocaleString()}
+                          </span>
+                        </div>
                       )}
 
                       {task.taskAssignments.length > 0 && (

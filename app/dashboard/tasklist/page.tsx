@@ -142,6 +142,8 @@ const TaskListPage: React.FC = () => {
       taskAssignments: [],
       blockedBy: [],
       blocking: [],
+      dueDate: new Date(),
+      expectedHours: 0,
       isEditing: true,
       isNew: true,
     };

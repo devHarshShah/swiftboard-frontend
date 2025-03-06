@@ -72,8 +72,15 @@ export async function POST(
   }
 
   try {
-    const { name, description, status, assignedUserIds, blockedTaskIds } =
-      await request.json();
+    const {
+      name,
+      description,
+      status,
+      assignedUserIds,
+      blockedTaskIds,
+      dueDate,
+      expectedHours,
+    } = await request.json();
 
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}/projects/${projectId}/tasks`,
@@ -89,6 +96,8 @@ export async function POST(
           status,
           assignedUserIds,
           blockedTaskIds,
+          dueDate,
+          expectedHours,
         }),
       },
     );

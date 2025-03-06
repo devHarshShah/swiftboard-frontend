@@ -122,8 +122,14 @@ export async function PUT(
   }
 
   try {
-    const { name, description, status, assignedUserIds, blockedTaskIds } =
-      await request.json();
+    const {
+      name,
+      description,
+      status,
+      assignedUserIds,
+      blockedTaskIds,
+      dueDate,
+    } = await request.json();
 
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}/projects/${projectId}/tasks/${taskId}`,
@@ -139,6 +145,7 @@ export async function PUT(
           status,
           assignedUserIds,
           blockedTaskIds,
+          dueDate,
         }),
       },
     );
