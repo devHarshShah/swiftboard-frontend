@@ -833,7 +833,7 @@ const TaskListPage: React.FC = () => {
           if (!blockedBy || blockedBy.length === 0)
             return (
               <div
-                className="text-sm text-gray-500 italic hover:bg-gray-50 p-2 rounded transition-colors"
+                className="text-sm text-gray-500 italic p-2 rounded transition-colors"
                 onDoubleClick={() => startEditing(task)}
               >
                 No blockers
@@ -842,7 +842,7 @@ const TaskListPage: React.FC = () => {
 
           return (
             <div
-              className="flex flex-wrap gap-1 hover:bg-gray-50 p-2 rounded transition-colors"
+              className="flex flex-wrap gap-1 p-2 rounded transition-colors"
               onDoubleClick={() => startEditing(task)}
             >
               {blockedBy.map((blockerTask) => (
@@ -921,7 +921,7 @@ const TaskListPage: React.FC = () => {
           if (!blocking || blocking.length === 0)
             return (
               <div
-                className="text-sm text-gray-500 italic hover:bg-gray-50 p-2 rounded transition-colors"
+                className="text-sm text-gray-500 italic p-2 rounded transition-colors"
                 onDoubleClick={() => startEditing(task)}
               >
                 Not blocking
@@ -1064,17 +1064,6 @@ const TaskListPage: React.FC = () => {
         <Button onClick={addNewTask} className="flex items-center gap-2">
           <Plus className="h-4 w-4" /> Add Task
         </Button>
-      </div>
-
-      <div className="flex items-center py-4">
-        <Input
-          placeholder="Filter tasks..."
-          value={table.getColumn("name")?.getFilterValue() as string}
-          onChange={(event) =>
-            table.getColumn("name")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
       </div>
 
       <div className="rounded-md border">
