@@ -8,7 +8,6 @@ import {
   Clock,
   FileStack,
   Gauge,
-  GitBranch,
   LifeBuoy,
   LineChart,
   MessageCircle,
@@ -49,14 +48,14 @@ const data = {
           title: "Task Lists",
           url: "/dashboard/tasklist",
         },
-        {
-          title: "Dependencies & Subtasks",
-          url: "#",
-        },
-        {
-          title: "Templates",
-          url: "#",
-        },
+        // {
+        //   title: "Dependencies & Subtasks",
+        //   url: "#",
+        // },
+        // {
+        //   title: "Templates",
+        //   url: "#",
+        // },
       ],
     },
     {
@@ -83,40 +82,13 @@ const data = {
       ],
     },
     {
-      title: "Agile & Scrum",
-      url: "#",
-      icon: GitBranch,
-      items: [
-        {
-          title: "Sprint Planning",
-          url: "#",
-        },
-        {
-          title: "Backlog",
-          url: "#",
-        },
-        {
-          title: "User Stories",
-          url: "#",
-        },
-        {
-          title: "Team Velocity",
-          url: "#",
-        },
-        {
-          title: "Retrospectives",
-          url: "#",
-        },
-      ],
-    },
-    {
       title: "Collaboration",
       url: "#",
       icon: MessageCircle,
       items: [
         {
           title: "Chat",
-          url: "#",
+          url: "/dashboard/chat",
         },
         {
           title: "Comments",
