@@ -1,89 +1,62 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar } from "@/components/ui/avatar";
-import { Search, Plus, Settings, User, MessageSquare } from "lucide-react";
+import { Search, Plus, Settings } from "lucide-react";
+import { apiClient } from "@/lib/apiClient";
+import Cookies from "js-cookie";
 
-// Types for our chat conversations
-interface Conversation {
+// Types for team members
+interface TeamMember {
   id: string;
   name: string;
-  lastMessage: string;
-  timestamp: Date;
-  unread: number;
+  email: string;
 }
-
-// Sample conversations
-const initialConversations: Conversation[] = [
-  {
-    id: "1",
-    name: "Customer Support",
-    lastMessage: "Hello! How can I assist you today?",
-    timestamp: new Date(Date.now() - 5 * 60000),
-    unread: 0,
-  },
-  {
-    id: "2",
-    name: "Sales Team",
-    lastMessage: "Thank you for your inquiry about our premium plans.",
-    timestamp: new Date(Date.now() - 65 * 60000),
-    unread: 2,
-  },
-  {
-    id: "3",
-    name: "Technical Support",
-    lastMessage: "Have you tried restarting your device?",
-    timestamp: new Date(Date.now() - 240 * 60000),
-    unread: 0,
-  },
-];
 
 export default function Sidebar({
   onSelectConversation,
 }: {
   onSelectConversation: (id: string) => void;
 }) {
-  const [conversations, setConversations] =
-    useState<Conversation[]>(initialConversations);
+  const [members, setMembers] = useState<TeamMember[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeConversation, setActiveConversation] = useState("1");
+  const [activeConversation, setActiveConversation] = useState("");
+  const teamId = Cookies.get("activeTeamId");
 
-  // Filter conversations based on search query
-  const filteredConversations = conversations.filter((conv) =>
-    conv.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  // Fetch team members
+  useEffect(() => {
+    const fetchMembers = async () => {
+      if (!teamId) return;
+
+      try {
+        const response = await apiClient(`/api/teams/${teamId}/members`);
+        const data = await response.json();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const teamMembers = data.map((member: any) => ({
+          id: member.user.id,
+          name: member.user.name || member.user.email.split("@")[0],
+          email: member.user.email,
+        }));
+        setMembers(teamMembers);
+      } catch (error) {
+        console.error("Failed to fetch team members:", error);
+      }
+    };
+
+    fetchMembers();
+  }, [teamId]);
+
+  // Filter members based on search query
+  const filteredMembers = members.filter(
+    (member) =>
+      member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      member.email.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   // Handle selecting a conversation
   const handleSelectConversation = (id: string) => {
     setActiveConversation(id);
-
-    // Mark conversation as read
-    setConversations(
-      conversations.map((conv) =>
-        conv.id === id ? { ...conv, unread: 0 } : conv,
-      ),
-    );
-
-    // Call the parent component's handler
     onSelectConversation(id);
-  };
-
-  // Format time stamp
-  const formatTimestamp = (date: Date) => {
-    const now = new Date();
-    const isToday =
-      date.getDate() === now.getDate() &&
-      date.getMonth() === now.getMonth() &&
-      date.getFullYear() === now.getFullYear();
-
-    if (isToday) {
-      return date.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    }
-
-    return date.toLocaleDateString([], { month: "short", day: "numeric" });
   };
 
   return (
@@ -104,7 +77,7 @@ export default function Sidebar({
         <div className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search conversations..."
+            placeholder="Search members..."
             className="pl-8"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -112,67 +85,36 @@ export default function Sidebar({
         </div>
       </div>
 
-      {/* Conversation filters */}
-      <div className="px-2 py-2 border-b border-sidebar-border">
-        <div className="flex space-x-1">
-          <Button variant="ghost" size="sm" className="flex-1 justify-start">
-            <MessageSquare className="h-4 w-4 mr-2" />
-            All
-          </Button>
-          <Button variant="ghost" size="sm" className="flex-1 justify-start">
-            <User className="h-4 w-4 mr-2" />
-            Unread
-            <span className="ml-auto bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              {conversations.reduce((acc, conv) => acc + conv.unread, 0)}
-            </span>
-          </Button>
-        </div>
-      </div>
-
-      {/* Conversation list */}
+      {/* Members list */}
       <div className="flex-1 overflow-y-auto scrollbar-show-on-hover">
-        {filteredConversations.length > 0 ? (
-          filteredConversations.map((conversation) => (
+        {filteredMembers.length > 0 ? (
+          filteredMembers.map((member) => (
             <div
-              key={conversation.id}
+              key={member.id}
               className={`p-3 cursor-pointer hover:bg-sidebar-accent/40 ${
-                activeConversation === conversation.id
-                  ? "bg-sidebar-accent"
-                  : ""
+                activeConversation === member.id ? "bg-sidebar-accent" : ""
               }`}
-              onClick={() => handleSelectConversation(conversation.id)}
+              onClick={() => handleSelectConversation(member.id)}
             >
               <div className="flex items-start space-x-3">
                 <Avatar className="h-10 w-10 flex-shrink-0 flex justify-center items-center">
-                  {conversation.name.charAt(0)}
+                  {member.name.charAt(0)}
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <h3
-                      className={`font-medium truncate ${conversation.unread > 0 ? "font-semibold" : ""}`}
-                    >
-                      {conversation.name}
-                    </h3>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
-                      {formatTimestamp(conversation.timestamp)}
-                    </span>
+                    <h3 className="font-medium truncate">{member.name}</h3>
                   </div>
                   <p className="text-sm truncate text-muted-foreground">
-                    {conversation.lastMessage}
+                    {member.email}
                   </p>
                 </div>
-                {conversation.unread > 0 && (
-                  <span className="bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center flex-shrink-0">
-                    {conversation.unread}
-                  </span>
-                )}
               </div>
             </div>
           ))
         ) : (
           <div className="flex flex-col items-center justify-center h-full p-4 text-center text-muted-foreground">
             <Search className="h-12 w-12 mb-2 opacity-20" />
-            <p>No conversations found</p>
+            <p>No members found</p>
             <p className="text-sm">Try a different search term</p>
           </div>
         )}

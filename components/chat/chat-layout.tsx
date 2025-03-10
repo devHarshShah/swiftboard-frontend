@@ -2,15 +2,19 @@
 import React, { useState } from "react";
 import Sidebar from "./sidebar";
 import ChatInterface from "./chat-interface";
+import Cookies from "js-cookie";
 
 export default function ChatLayout() {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   const [activeConversation, setActiveConversation] = useState("1");
 
   const handleSelectConversation = (id: string) => {
     setActiveConversation(id);
     // You could load different messages here based on the conversation ID
   };
+
+  const currentUserId = Cookies.get("userId") || "";
+  const chatWithUserId = activeConversation;
 
   return (
     <div className="flex h-[calc(100vh-80px)] bg-background text-foreground">
@@ -21,7 +25,7 @@ export default function ChatLayout() {
 
       {/* Chat Interface - takes remaining space */}
       <div className="flex-1 h-full overflow-y-auto">
-        <ChatInterface />
+        <ChatInterface userId={currentUserId} receiverId={chatWithUserId} />
       </div>
     </div>
   );

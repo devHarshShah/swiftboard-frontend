@@ -6,6 +6,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Send, User, Bot, Paperclip, Mic, Image } from "lucide-react";
 import { useWebSocket } from "@/contexts/websocket-context";
+import { apiClient } from "@/lib/apiClient";
 
 // Types for our chat messages
 type MessageType = "user" | "bot";
@@ -17,79 +18,151 @@ interface Message {
   timestamp: Date;
 }
 
-// Sample initial messages
-const initialMessages: Message[] = [
-  {
-    id: "1",
-    content: "Hello! How can I assist you today?",
-    type: "bot",
-    timestamp: new Date(Date.now() - 60000),
-  },
-];
+// Type for messages from the backend
+interface ServerMessage {
+  id: string;
+  text: string;
+  senderId: string;
+  receiverId: string;
+  createdAt: string;
+}
 
-export default function ChatInterface() {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+export default function ChatInterface({
+  userId,
+  receiverId,
+}: {
+  userId: string;
+  receiverId: string;
+}) {
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [temporaryMessageId, setTemporaryMessageId] = useState<string | null>(
+    null,
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { socket } = useWebSocket();
 
-  // Auto-scroll to the bottom when new messages arrive
+  // Scroll to bottom whenever messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Focus the input field when the component mounts
+  // Setup WebSocket events and load messages when component mounts or receiverId changes
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    setMessages([]); // Clear existing messages
+    setInput(""); // Clear input field
+    setIsTyping(false); // Reset typing indicator
 
-  useEffect(() => {
-    if (!socket) return;
+    if (!socket || !receiverId) return;
 
-    socket.on("connect", () => {
-      console.log("connected");
-    });
+    // Create room name using the same format as the backend
+    const roomName = [userId, receiverId].sort().join("-");
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    socket.on("onMessage", (data: any) => {
-      // Add bot message
-      const botMessage: Message = {
-        id: Date.now().toString(),
-        content: data.content,
-        type: "bot",
-        timestamp: new Date(),
+    // Join new room
+    socket.emit("joinRoom", { userId, receiverId, roomName });
+
+    // Handle successful room join
+    // Define interface for join room success data
+    interface JoinRoomSuccessData {
+      roomName: string;
+    }
+
+    const handleJoinRoomSuccess = (data: JoinRoomSuccessData) => {
+      console.log(`Successfully joined room: ${data.roomName}`);
+    };
+
+    // Handle incoming messages
+    const handleNewMessage = (message: ServerMessage) => {
+      // Convert server message to our message format
+      const newMessage: Message = {
+        id: message.id,
+        content: message.text,
+        type: message.senderId === userId ? "user" : "bot",
+        timestamp: new Date(message.createdAt),
       };
 
-      setMessages((prev) => [...prev, botMessage]);
-      setIsTyping(false);
-    });
+      // If this is the expected message (matches our temporary ID), remove typing indicator
+      if (temporaryMessageId && message.senderId === userId) {
+        setIsTyping(false);
+        setTemporaryMessageId(null);
+      }
 
-    return () => {
-      socket.off("connect");
-      socket.off("onMessage");
+      // Add new message to the list
+      setMessages((prevMessages) => {
+        // Filter out temporary message if this is the corresponding real message
+        const filteredMessages = prevMessages.filter(
+          (msg) => msg.id !== `temp-${message.id}`,
+        );
+        return [...filteredMessages, newMessage];
+      });
     };
-  }, [socket]);
+
+    // Listen for events
+    socket.on("joinRoomSuccess", handleJoinRoomSuccess);
+    socket.on("newMessage", handleNewMessage);
+
+    // Load previous messages for this conversation
+    const loadMessages = async () => {
+      try {
+        const response = await apiClient(
+          `/api/messages/${userId}/${receiverId}`,
+        );
+        const data = await response.json();
+        const formattedMessages = data.map((msg: ServerMessage) => ({
+          id: msg.id,
+          content: msg.text,
+          type: msg.senderId === userId ? "user" : "bot",
+          timestamp: new Date(msg.createdAt),
+        }));
+        setMessages(formattedMessages);
+      } catch (error) {
+        console.error("Failed to load messages:", error);
+      }
+    };
+
+    loadMessages();
+
+    // Cleanup event listeners when component unmounts or receiverId changes
+    return () => {
+      socket.off("joinRoomSuccess", handleJoinRoomSuccess);
+      socket.off("newMessage", handleNewMessage);
+    };
+  }, [userId, receiverId, socket, temporaryMessageId]);
 
   const handleSendMessage = () => {
-    if (input.trim() === "") return;
+    if (input.trim() === "" || !socket) return;
 
-    // Add user message
-    const userMessage: Message = {
-      id: Date.now().toString(),
+    // Generate temporary message ID
+    const tempId = `temp-${Date.now()}`;
+    setTemporaryMessageId(tempId);
+
+    // Add temporary message immediately to UI
+    const tempMessage: Message = {
+      id: tempId,
       content: input.trim(),
       type: "user",
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages((prevMessages) => [...prevMessages, tempMessage]);
+
+    // Create message payload for the backend
+    const messagePayload = {
+      text: input.trim(),
+      sender: userId,
+      receiver: receiverId,
+    };
+
+    // Send message via socket
+    socket.emit("sendMessage", messagePayload);
+
+    // Clear input field
     setInput("");
 
-    // Simulate bot typing
+    // Show typing indicator for response
     setIsTyping(true);
-
-    socket?.emit("message", userMessage.content);
   };
 
   // Handle file input change
@@ -113,7 +186,7 @@ export default function ChatInterface() {
             <Bot className="text-primary-foreground h-8 w-8" />
           </Avatar>
           <div>
-            <h2 className="font-semibold">ChatBot</h2>
+            <h2 className="font-semibold">Chat with {receiverId}</h2>
             <p className="text-xs text-muted-foreground">Online</p>
           </div>
         </div>

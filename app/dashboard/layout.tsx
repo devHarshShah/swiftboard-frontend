@@ -45,6 +45,7 @@ export default function RootLayout({
         const userData = await userResponse.json();
         if (userResponse.ok) {
           setUser(userData);
+          Cookies.set("userId", userData.id);
         } else {
           console.error("Failed to fetch user data:", userData.error);
         }
