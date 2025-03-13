@@ -8,7 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/src/components/ui/popover";
-import { Task } from "@/src/app/types/kanban.types";
+import { Task } from "@/src/types/types";
 
 interface TaskSelectorProps {
   tasks: Task[];

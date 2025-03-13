@@ -9,12 +9,7 @@ import { DateTimePicker } from "@/src/components/ui/date-timepicker";
 import { UserSelector } from "./user-selector";
 import { TaskSelector } from "./task-selector";
 import { cn } from "@/src/lib/utils";
-import {
-  Task,
-  User,
-  NewTaskData,
-  statusConfig,
-} from "@/src/app/types/kanban.types";
+import { Task, User, NewTaskData, statusConfig } from "@/src/types/types";
 
 interface TaskFormProps {
   task: Task | NewTaskData;

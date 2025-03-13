@@ -27,7 +27,7 @@ import {
   TaskStatusKey,
   statusConfig,
   User,
-} from "@/src/app/types/kanban.types";
+} from "@/src/types/types";
 
 interface TaskCardProps {
   task: Task;

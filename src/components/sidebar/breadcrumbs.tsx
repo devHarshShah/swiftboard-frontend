@@ -11,6 +11,7 @@ import {
 import { Separator } from "@/src/components/ui/separator";
 import { SidebarTrigger } from "@/src/components/ui/sidebar";
 import { ModeToggle } from "./theme-toggle";
+import { NotificationPanel } from "./notification-panel";
 
 const BreadCrumbs = () => {
   const pathname = usePathname();
@@ -49,7 +50,10 @@ const BreadCrumbs = () => {
             )}
           </BreadcrumbList>
         </Breadcrumb>
-        <div className="ml-auto">{ModeToggle()}</div>
+        <div className="ml-auto flex items-center gap-2">
+          <NotificationPanel />
+          {ModeToggle()}
+        </div>
       </div>
     </header>
   );

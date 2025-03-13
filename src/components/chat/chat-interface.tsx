@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useWebSocket } from "@/src/contexts/websocket-context";
 import { apiClient } from "@/src/lib/apiClient";
-import { User as KanbanUser } from "@/src/app/types/kanban.types";
+import { User as KanbanUser } from "@/src/types/types";
 
 // Types for our chat messages
 type MessageType = "user" | "bot";

@@ -8,7 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/src/components/ui/popover";
-import { User } from "@/src/app/types/kanban.types";
+import { User } from "@/src/types/types";
 
 interface UserSelectorProps {
   users: User[];

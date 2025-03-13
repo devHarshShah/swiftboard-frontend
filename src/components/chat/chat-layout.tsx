@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import Sidebar from "./sidebar";
 import ChatInterface from "./chat-interface";
 import Cookies from "js-cookie";
-import { User } from "@/src/app/types/kanban.types";
+import { User } from "@/src/types/types";
 
 export default function ChatLayout() {
   const [activeConversation, setActiveConversation] = useState<User | null>(

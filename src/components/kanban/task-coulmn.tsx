@@ -3,11 +3,7 @@ import { Button } from "@/src/components/ui/button";
 import { Plus } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import { TaskCard } from "./task-card";
-import {
-  Task,
-  TaskStatusKey,
-  statusConfig,
-} from "@/src/app/types/kanban.types";
+import { Task, TaskStatusKey, statusConfig } from "@/src/types/types";
 
 interface TaskColumnProps {
   status: TaskStatusKey;

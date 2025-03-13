@@ -62,12 +62,7 @@ import {
   PopoverTrigger,
 } from "@/src/components/ui/popover";
 import { apiClient } from "@/src/lib/apiClient";
-import {
-  Task,
-  TaskStatusKey,
-  statusConfig,
-  User,
-} from "@/src/app/types/kanban.types";
+import { Task, TaskStatusKey, statusConfig, User } from "@/src/types/types";
 import { DateTimePicker } from "@/src/components/ui/date-timepicker";
 
 // Extended type to include additional properties for table rendering

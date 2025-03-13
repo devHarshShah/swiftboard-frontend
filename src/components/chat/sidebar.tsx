@@ -5,7 +5,7 @@ import { Avatar } from "@/src/components/ui/avatar";
 import { Search, Plus, Settings } from "lucide-react";
 import { apiClient } from "@/src/lib/apiClient";
 import Cookies from "js-cookie";
-import { User } from "@/src/app/types/kanban.types";
+import { User } from "@/src/types/types";
 
 // Types for team members
 interface TeamMember {

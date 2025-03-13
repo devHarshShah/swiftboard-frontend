@@ -12,7 +12,7 @@ import {
   NewTaskData,
   GroupedTasks,
   statusConfig,
-} from "@/src/app/types/kanban.types";
+} from "@/src/types/types";
 
 const KanbanBoard: React.FC = () => {
   const [tasks, setTasks] = useState<GroupedTasks>({
