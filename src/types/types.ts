@@ -71,3 +71,14 @@ export const statusConfig = {
     hoverColor: "hover:bg-chart-5/20 dark:hover:bg-chart-5/30",
   },
 };
+
+export type NodeType = "start" | "task" | "condition" | "api" | "data" | "end";
+
+export interface WorkflowNodeData {
+  label: string;
+  type: NodeType;
+  description: string;
+  icon?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  config: Record<string, any>;
+}

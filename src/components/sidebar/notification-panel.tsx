@@ -143,11 +143,11 @@ export function NotificationPanel() {
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`flex items-start gap-3 p-3 hover:bg-muted/50 transition-colors ${
+                  className={`flex items-start gap-3 p-3 hover:bg-muted/50 transition-colors border-gray-300 border-b ${
                     !notification.read ? "bg-muted/30" : ""
                   }`}
                 >
-                  <Avatar className="h-8 w-8 bg-primary/10">
+                  <Avatar className="h-8 w-8 bg-primary/10 flex justify-center items-center">
                     <Bell className="h-4 w-4 text-primary" />
                   </Avatar>
                   <div className="space-y-1">
