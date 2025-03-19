@@ -18,7 +18,7 @@ import "reactflow/dist/style.css";
 import WorkflowNode from "@/src/components/workflow-node";
 import { v4 as uuidv4 } from "uuid";
 import { WorkflowNodeData } from "@/src/types/types";
-import { PlusIcon, ChevronDownIcon } from "lucide-react";
+import { PlusIcon, ChevronDownIcon, Trash2Icon } from "lucide-react";
 import { apiClient } from "@/src/lib/apiClient";
 
 const nodeTypes: NodeTypes = {
@@ -85,8 +85,12 @@ const WorkflowBuilder: React.FC = () => {
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [workflowFetched, setWorkflowFetched] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedElements, setSelectedElements] = useState<{
+    nodes: Node[];
+    edges: Edge[];
+  }>({ nodes: [], edges: [] });
+  const [showDeleteTooltip, setShowDeleteTooltip] = useState(false);
 
-  // Update the useEffect hook for fetching workflow data
   useEffect(() => {
     const fetchWorkflow = async () => {
       try {
@@ -98,7 +102,6 @@ const WorkflowBuilder: React.FC = () => {
         const data = await response.json();
 
         if (data.nodes && data.edges) {
-          // Transform nodes from backend format to ReactFlow format
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const transformedNodes = data.nodes.map((node: any) => ({
             id: node.id,
@@ -123,7 +126,6 @@ const WorkflowBuilder: React.FC = () => {
             dragging: node.dragging || false,
           }));
 
-          // Transform edges from backend format to ReactFlow format
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const transformedEdges = data.edges.map((edge: any) => ({
             id: edge.id,
@@ -142,19 +144,16 @@ const WorkflowBuilder: React.FC = () => {
                   },
           }));
 
-          // Set the transformed data to state
           setNodes(transformedNodes);
           setEdges(transformedEdges);
           setName(data.name);
           setWorkflowFetched(true);
         } else {
-          // If no data, set initial nodes
           setNodes(initialNodes);
           setEdges(initialEdges);
         }
       } catch (error) {
         console.error("Error fetching workflow:", error);
-        // On error, set initial nodes
         setNodes(initialNodes);
         setEdges(initialEdges);
       } finally {
@@ -163,7 +162,38 @@ const WorkflowBuilder: React.FC = () => {
     };
 
     fetchWorkflow();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const handleNodeUpdate = (event: CustomEvent) => {
+      const { nodeId, updatedData } = event.detail;
+
+      setNodes((nds) =>
+        nds.map((node) => {
+          if (node.id === nodeId) {
+            return {
+              ...node,
+              data: updatedData,
+            };
+          }
+          return node;
+        }),
+      );
+    };
+
+    window.addEventListener(
+      "nodeConfigUpdate",
+      handleNodeUpdate as EventListener,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "nodeConfigUpdate",
+        handleNodeUpdate as EventListener,
+      );
+    };
+  }, [setNodes]);
 
   const onConnect = useCallback(
     (params: Connection) =>
@@ -209,11 +239,54 @@ const WorkflowBuilder: React.FC = () => {
     [reactFlowInstance, setNodes],
   );
 
+  const onSelectionChange = useCallback(
+    ({ nodes, edges }: { nodes: Node[]; edges: Edge[] }) => {
+      setSelectedElements({ nodes, edges });
+      setShowDeleteTooltip(nodes.length > 0 || edges.length > 0);
+    },
+    [],
+  );
+
+  const deleteSelectedElements = useCallback(() => {
+    if (
+      selectedElements.nodes.length > 0 ||
+      selectedElements.edges.length > 0
+    ) {
+      setNodes((nds) =>
+        nds.filter(
+          (node) => !selectedElements.nodes.some((n) => n.id === node.id),
+        ),
+      );
+      setEdges((eds) =>
+        eds.filter(
+          (edge) => !selectedElements.edges.some((e) => e.id === edge.id),
+        ),
+      );
+      setSelectedElements({ nodes: [], edges: [] });
+      setShowDeleteTooltip(false);
+    }
+  }, [selectedElements, setNodes, setEdges]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key === "Delete" &&
+        (selectedElements.nodes.length > 0 || selectedElements.edges.length > 0)
+      ) {
+        deleteSelectedElements();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedElements, deleteSelectedElements]);
+
   const handleDraft = async () => {
     const name = "Test";
     console.log({ name, nodes, edges });
     try {
-      // Transform nodes to match backend DTO
       const transformedNodes = nodes.map((node) => ({
         id: node.id,
         type: node.type,
@@ -234,7 +307,6 @@ const WorkflowBuilder: React.FC = () => {
         },
       }));
 
-      // Transform edges to match backend DTO
       const transformedEdges = edges.map((edge) => ({
         id: edge.id,
         type: edge.type,
@@ -243,7 +315,6 @@ const WorkflowBuilder: React.FC = () => {
         sourceHandle: edge.sourceHandle,
         targetHandle: edge.targetHandle,
         animated: edge.animated || false,
-        // Stringify the style object
         style: JSON.stringify({
           stroke: edge.style?.stroke || "#4f46e5",
           strokeWidth: edge.style?.strokeWidth || 2,
@@ -275,7 +346,6 @@ const WorkflowBuilder: React.FC = () => {
 
   const updateDraft = async () => {
     try {
-      // Transform nodes and edges same as handleDraft
       const transformedNodes = nodes.map((node) => ({
         id: node.id,
         type: node.type,
@@ -355,6 +425,8 @@ const WorkflowBuilder: React.FC = () => {
               type: "smoothstep",
               style: { stroke: "#4f46e5", strokeWidth: 2 },
             }}
+            onSelectionChange={onSelectionChange}
+            deleteKeyCode={["Delete", "Backspace"]} // Built-in key handler
           >
             <MiniMap
               nodeStrokeColor="#4f46e5"
@@ -363,6 +435,30 @@ const WorkflowBuilder: React.FC = () => {
             />
             <Controls />
             <Background gap={24} />
+
+            {/* Add Delete Action Panel */}
+            {showDeleteTooltip && (
+              <Panel position="bottom-center" className="mb-8">
+                <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200 flex items-center gap-3 animate-fade-in">
+                  <Trash2Icon size={18} className="text-red-500" />
+                  <div className="text-sm text-gray-700">
+                    <span className="font-medium">
+                      {selectedElements.nodes.length} node
+                      {selectedElements.nodes.length !== 1 ? "s" : ""} and{" "}
+                      {selectedElements.edges.length} edge
+                      {selectedElements.edges.length !== 1 ? "s" : ""} selected
+                    </span>
+                  </div>
+                  <button
+                    onClick={deleteSelectedElements}
+                    className="ml-2 px-3 py-1 bg-red-100 text-red-700 text-sm font-medium rounded-md hover:bg-red-200 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </Panel>
+            )}
+
             <Panel
               position="top-center"
               className="flex items-center justify-between w-full"
@@ -476,6 +572,23 @@ const WorkflowBuilder: React.FC = () => {
           </ReactFlow>
         )}
       </div>
+
+      {/* CSS for animations */}
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease-out forwards;
+        }
+      `}</style>
     </div>
   );
 };

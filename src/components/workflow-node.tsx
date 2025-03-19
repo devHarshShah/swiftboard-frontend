@@ -1,14 +1,161 @@
-// components/WorkflowNode.tsx
-import React, { useState } from "react";
-import { Handle, Position, NodeProps } from "reactflow";
-import { WorkflowNodeData } from "@/src/types/types";
-import { Settings2, Trash2 } from "lucide-react";
+import React, { useState, useCallback, useEffect } from "react";
+import { Handle, Position, NodeProps, useReactFlow } from "reactflow";
+import { User, WorkflowNodeData } from "@/src/types/types";
+import {
+  CircleAlert,
+  Settings2,
+  Trash2,
+  Users,
+  Play,
+  Square,
+  GitBranch,
+  Globe,
+  Database,
+  ListTodo,
+  Check,
+} from "lucide-react";
+import { UserSelector } from "./kanban/user-selector";
+import { apiClient } from "../lib/apiClient";
+import Cookies from "js-cookie";
+
+interface Task {
+  id: string;
+  name: string;
+  description: string;
+}
 
 const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
   data,
   selected,
+  id,
 }) => {
   const [showConfig, setShowConfig] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const { getNode, getEdges } = useReactFlow();
+  const [users, setUsers] = useState<User[]>([]);
+  const teamId = Cookies.get("activeTeamId");
+
+  const fetchUsers = useCallback(async () => {
+    if (!teamId) return;
+
+    try {
+      const response = await apiClient(`/api/teams/${teamId}/members`);
+      const userData = await response.json();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const users = userData.map((member: any) => member.user);
+      setUsers(users);
+    } catch (error) {
+      console.error("Failed to fetch users", error);
+    }
+  }, [teamId]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  const [localData, setLocalData] = useState({
+    label: data.label,
+    description: data.description,
+    conditionType: data.config?.conditionType || "Expression",
+    userIds: data.config?.userIds || [],
+    blockedBy: data.config?.blockedBy || [],
+  });
+
+  // Handle input changes
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    const { name, value } = e.target;
+    setLocalData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Check for upstream task nodes
+  useEffect(() => {
+    if (data.type === "task") {
+      const edges = getEdges();
+      const incomingEdges = edges.filter((edge) => edge.target === id);
+
+      const blockedByNodes = incomingEdges
+        .map((edge) => {
+          const sourceNode = getNode(edge.source);
+          if (sourceNode && sourceNode.data.type === "task") {
+            return {
+              id: sourceNode.id,
+              name: sourceNode.data.label,
+              description: sourceNode.data.description,
+            };
+          }
+          return null;
+        })
+        .filter(Boolean);
+
+      // Update local data with blocked by nodes
+      if (blockedByNodes.length > 0) {
+        setLocalData((prev) => {
+          // Check if nodes already exist in blockedBy
+          const existingIds: string[] = prev.blockedBy.map(
+            (task: { id: string }) => task.id,
+          );
+          const newBlockedBy = [
+            ...prev.blockedBy,
+            ...blockedByNodes.filter(
+              (node): node is NonNullable<typeof node> =>
+                node !== null && !existingIds.includes(node.id),
+            ),
+          ];
+
+          return {
+            ...prev,
+            blockedBy: newBlockedBy,
+          };
+        });
+      }
+    }
+  }, [id, data.type, getEdges, getNode]);
+
+  const handleApplyChanges = useCallback(() => {
+    const updatedData = {
+      ...data,
+      label: localData.label,
+      description: localData.description,
+      config: {
+        ...data.config,
+        conditionType:
+          data.type === "condition" ? localData.conditionType : undefined,
+        userIds: data.type === "task" ? localData.userIds : undefined,
+        blockedBy: data.type === "task" ? localData.blockedBy : undefined,
+      },
+    };
+
+    const event = new CustomEvent("nodeConfigUpdate", {
+      detail: { nodeId: id, updatedData },
+    });
+    window.dispatchEvent(event);
+
+    setShowConfig(false);
+  }, [data, localData, id]);
+
+  const handleUserToggle = (userId: string) => {
+    const currentUserIds = localData.userIds || [];
+
+    const updatedUserIds: string[] = currentUserIds.includes(userId)
+      ? currentUserIds.filter((id: string) => id !== userId)
+      : [...currentUserIds, userId];
+
+    setLocalData((prev) => ({
+      ...prev,
+      userIds: updatedUserIds,
+    }));
+  };
+  const getSelectedUsers = () => {
+    const selectedUserIds = localData.userIds || [];
+    return selectedUserIds
+      .map((userId: string) => users.find((user: User) => user.id === userId))
+      .filter((user: User): user is User => Boolean(user)) as User[];
+  };
 
   const getNodeStyles = () => {
     const baseStyle =
@@ -28,6 +175,8 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
         return `${baseStyle} ${selectedStyle} bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200`;
       case "data":
         return `${baseStyle} ${selectedStyle} bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200`;
+      case "task":
+        return `${baseStyle} ${selectedStyle} bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-200`;
       default:
         return `${baseStyle} ${selectedStyle} bg-gradient-to-br from-indigo-50 to-indigo-100 border border-indigo-200`;
     }
@@ -45,151 +194,48 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
         return "text-purple-600";
       case "data":
         return "text-blue-600";
+      case "task":
+        return "text-teal-600";
       default:
         return "text-indigo-600";
     }
   };
 
   const getNodeIcon = () => {
+    const iconProps = {
+      size: 18,
+      className: "stroke-current",
+    };
+
     switch (data.type) {
       case "start":
-        return (
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M5 12h14M12 5v14"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        );
+        return <Play {...iconProps} />;
       case "end":
-        return (
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <rect
-              x="3"
-              y="3"
-              width="18"
-              height="18"
-              rx="2"
-              stroke="currentColor"
-              strokeWidth="2"
-            />
-          </svg>
-        );
+        return <Square {...iconProps} />;
       case "condition":
-        return (
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M6 3v18m12-18v18M3 6h6m6 0h6M3 18h6m6 0h6"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        );
+        return <GitBranch {...iconProps} />;
       case "api":
-        return (
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M22 12A10 10 0 1 1 12 2a10 10 0 0 1 10 10z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M22 12c0-5.523-4.477-10-10-10"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeDasharray="2 2"
-            />
-          </svg>
-        );
+        return <Globe {...iconProps} />;
       case "data":
-        return (
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <ellipse
-              cx="12"
-              cy="5"
-              rx="9"
-              ry="3"
-              stroke="currentColor"
-              strokeWidth="2"
-            />
-            <path
-              d="M21 12c0 1.657-4.03 3-9 3s-9-1.343-9-3"
-              stroke="currentColor"
-              strokeWidth="2"
-            />
-            <path
-              d="M3 5v14c0 1.657 4.03 3 9 3s9-1.343 9-3V5"
-              stroke="currentColor"
-              strokeWidth="2"
-            />
-          </svg>
-        );
+        return <Database {...iconProps} />;
+      case "task":
+        return <ListTodo {...iconProps} />;
       default:
-        return (
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle
-              cx="12"
-              cy="12"
-              r="9"
-              stroke="currentColor"
-              strokeWidth="2"
-            />
-            <path
-              d="M9 12l2 2 4-4"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        );
+        return <Check {...iconProps} />;
     }
   };
+
+  // Display assigned users badge if task node has assignments
+  const hasAssignments =
+    data.type === "task" &&
+    ((data.config?.userIds && data.config.userIds.length > 0) ||
+      (localData.userIds && localData.userIds.length > 0));
+
+  // Display blocked by badge if task node has dependencies
+  const hasBlockers =
+    data.type === "task" &&
+    ((data.config?.blockedBy && data.config.blockedBy.length > 0) ||
+      (localData.blockedBy && localData.blockedBy.length > 0));
 
   return (
     <>
@@ -200,9 +246,8 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
           className="w-3 h-3 bg-white border-2 border-indigo-500"
         />
       )}
-
       <div className={getNodeStyles()} style={{ minWidth: "180px" }}>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
             <div
               className={`p-1.5 rounded-md ${getIconColor()} bg-white bg-opacity-70`}
@@ -223,6 +268,23 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
           </button>
         </div>
 
+        {(hasAssignments || hasBlockers) && (
+          <div className="flex gap-2 mt-1 ml-8">
+            {hasAssignments && (
+              <div className="bg-teal-100 text-teal-800 text-xs px-2 py-0.5 rounded-full flex items-center">
+                <Users size={12} className="mr-1" />
+                {(data.config?.userIds || localData.userIds).length}
+              </div>
+            )}
+            {hasBlockers && (
+              <div className="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded-full flex items-center">
+                <CircleAlert size={12} className="mr-1" />
+                {localData.blockedBy.length}
+              </div>
+            )}
+          </div>
+        )}
+
         {showConfig && (
           <div className="mt-3 pt-3 border-t border-gray-200">
             <div className="flex justify-between items-center mb-2">
@@ -241,7 +303,9 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
                 </label>
                 <input
                   type="text"
-                  value={data.label}
+                  name="label"
+                  value={localData.label}
+                  onChange={handleInputChange}
                   className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
@@ -252,7 +316,9 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
                 </label>
                 <input
                   type="text"
-                  value={data.description}
+                  name="description"
+                  value={localData.description}
+                  onChange={handleInputChange}
                   className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
@@ -262,7 +328,12 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     Condition Type
                   </label>
-                  <select className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                  <select
+                    name="conditionType"
+                    value={localData.conditionType}
+                    onChange={handleInputChange}
+                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                  >
                     <option>Expression</option>
                     <option>Data-based</option>
                     <option>Time-based</option>
@@ -270,8 +341,50 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
                 </div>
               )}
 
+              {/* Task assignment for task nodes */}
+              {data.type === "task" && (
+                <>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Assign Users
+                    </label>
+                    <UserSelector
+                      users={users} // You'll need to provide actual users here
+                      selectedUsers={getSelectedUsers()}
+                      onToggleUser={handleUserToggle}
+                      searchQuery={userSearchQuery}
+                      setSearchQuery={setUserSearchQuery}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Blocked By
+                    </label>
+                    <div className="text-xs text-gray-500 mb-1">
+                      Auto-detected: {localData.blockedBy?.length || 0} tasks
+                    </div>
+                    {localData.blockedBy && localData.blockedBy.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {localData.blockedBy.map((task: Task) => (
+                          <div
+                            key={task.id}
+                            className="bg-orange-100 text-orange-800 text-xs px-2 py-0.5 rounded-full flex items-center"
+                          >
+                            {task.name}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
               <div>
-                <button className="w-full px-3 py-1 mt-1 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100 transition-colors">
+                <button
+                  onClick={handleApplyChanges}
+                  className="w-full px-3 py-1 mt-1 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100 transition-colors"
+                >
                   Apply Changes
                 </button>
               </div>
@@ -279,7 +392,6 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
           </div>
         )}
       </div>
-
       {data.type !== "end" && (
         <Handle
           type="source"
