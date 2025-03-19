@@ -78,11 +78,12 @@ const nodeTemplates = [
 const WorkflowBuilder: React.FC = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [name, setName] = useState("");
   const [showTemplates, setShowTemplates] = useState(false);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
-
+  const [workflowFetched, setWorkflowFetched] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // Update the useEffect hook for fetching workflow data
@@ -144,6 +145,8 @@ const WorkflowBuilder: React.FC = () => {
           // Set the transformed data to state
           setNodes(transformedNodes);
           setEdges(transformedEdges);
+          setName(data.name);
+          setWorkflowFetched(true);
         } else {
           // If no data, set initial nodes
           setNodes(initialNodes);
@@ -270,6 +273,66 @@ const WorkflowBuilder: React.FC = () => {
     }
   };
 
+  const updateDraft = async () => {
+    try {
+      // Transform nodes and edges same as handleDraft
+      const transformedNodes = nodes.map((node) => ({
+        id: node.id,
+        type: node.type,
+        positionX: node.position.x,
+        positionY: node.position.y,
+        positionAbsoluteX: node.position.x,
+        positionAbsoluteY: node.position.y,
+        width: node.width || 225,
+        height: node.height || 66,
+        selected: node.selected || false,
+        dragging: node.dragging || false,
+        data: {
+          label: node.data.label,
+          type: node.data.type,
+          description: node.data.description,
+          icon: node.data.icon,
+          config: JSON.stringify(node.data.config || {}),
+        },
+      }));
+
+      const transformedEdges = edges.map((edge) => ({
+        id: edge.id,
+        type: edge.type,
+        source: edge.source,
+        target: edge.target,
+        sourceHandle: edge.sourceHandle,
+        targetHandle: edge.targetHandle,
+        animated: edge.animated || false,
+        style: JSON.stringify({
+          stroke: edge.style?.stroke || "#4f46e5",
+          strokeWidth: edge.style?.strokeWidth || 2,
+        }),
+      }));
+
+      const response = await apiClient("/api/workflow", {
+        method: "PUT", // Use PUT for update
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          nodes: transformedNodes,
+          edges: transformedEdges,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update workflow");
+      }
+
+      const data = await response.json();
+      console.log("Workflow updated:", data);
+    } catch (error) {
+      console.error("Error updating workflow:", error);
+    }
+  };
+
   return (
     <div className="w-full h-[calc(100vh-80px)]">
       <div className="w-full h-full" ref={reactFlowWrapper}>
@@ -375,14 +438,37 @@ const WorkflowBuilder: React.FC = () => {
                   </div>
                 )}
               </div>
+              <div>
+                <input
+                  type="text"
+                  placeholder="Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="px-4 py-2 w-48 text-sm bg-transparent font-medium border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                />
+              </div>
               <div className="flex flex-row gap-4 mr-8">
+                {workflowFetched ? (
+                  <button
+                    onClick={updateDraft}
+                    className="px-4 py-2 text-sm bg-white text-gray-700 font-medium border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  >
+                    Update Draft
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleDraft}
+                    className="px-4 py-2 text-sm bg-white text-gray-700 font-medium border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  >
+                    Save Draft
+                  </button>
+                )}
                 <button
-                  onClick={handleDraft}
-                  className="px-4 py-2 text-sm bg-white text-gray-700 font-medium border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 text-sm bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 transition-colors"
+                  onClick={() => {
+                    console.log("Publishing workflow");
+                  }}
                 >
-                  Save Draft
-                </button>
-                <button className="px-4 py-2 text-sm bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 transition-colors">
                   Publish
                 </button>
               </div>

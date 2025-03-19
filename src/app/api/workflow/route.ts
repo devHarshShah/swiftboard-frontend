@@ -83,3 +83,50 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export async function PUT(request: NextRequest) {
+  try {
+    const accessToken = request.cookies.get("access_token")?.value;
+
+    if (!accessToken) {
+      return NextResponse.json(
+        { error: "Unauthorized - No access token" },
+        { status: 401 },
+      );
+    }
+
+    const { name, nodes, edges } = await request.json();
+    const id = "cm8fwpg0u0001t1njiwgw307h"; // Hardcoded ID for now
+
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const response = await fetch(`${baseUrl}/workflow/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        name,
+        nodes,
+        edges,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return NextResponse.json(
+        { error: error.message || "Failed to update workflow" },
+        { status: response.status },
+      );
+    }
+
+    const data = await response.json();
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error("Error updating workflow:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
