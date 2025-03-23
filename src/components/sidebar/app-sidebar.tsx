@@ -4,7 +4,6 @@ import * as React from "react";
 import {
   Bell,
   BookOpen,
-  Clock,
   FileStack,
   LifeBuoy,
   MessageCircle,
@@ -51,29 +50,29 @@ const data = {
         // },
       ],
     },
-    {
-      title: "Time Tracking",
-      url: "#",
-      icon: Clock,
-      items: [
-        {
-          title: "Timer",
-          url: "#",
-        },
-        {
-          title: "Reports",
-          url: "#",
-        },
-        {
-          title: "Time Suggestions",
-          url: "#",
-        },
-        {
-          title: "Timesheets",
-          url: "#",
-        },
-      ],
-    },
+    // {
+    //   title: "Time Tracking",
+    //   url: "#",
+    //   icon: Clock,
+    //   items: [
+    //     {
+    //       title: "Timer",
+    //       url: "#",
+    //     },
+    //     {
+    //       title: "Reports",
+    //       url: "#",
+    //     },
+    //     {
+    //       title: "Time Suggestions",
+    //       url: "#",
+    //     },
+    //     {
+    //       title: "Timesheets",
+    //       url: "#",
+    //     },
+    //   ],
+    // },
     {
       title: "Collaboration",
       url: "#",
@@ -149,10 +148,6 @@ const data = {
           url: "/dashboard/workflow",
         },
         {
-          title: "App Integrations",
-          url: "#",
-        },
-        {
           title: "API & Webhooks",
           url: "#",
         },
@@ -171,14 +166,6 @@ const data = {
           title: "Email Settings",
           url: "#",
         },
-        {
-          title: "Priority Alerts",
-          url: "#",
-        },
-        {
-          title: "AI Suggestions",
-          url: "#",
-        },
       ],
     },
     {
@@ -192,14 +179,6 @@ const data = {
         },
         {
           title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Customization",
           url: "#",
         },
       ],

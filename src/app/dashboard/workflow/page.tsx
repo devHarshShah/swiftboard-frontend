@@ -18,9 +18,11 @@ import "reactflow/dist/style.css";
 import WorkflowNode from "@/src/components/workflow-node";
 import { v4 as uuidv4 } from "uuid";
 import { WorkflowNodeData } from "@/src/types/types";
-import { PlusIcon, ChevronDownIcon, Trash2Icon } from "lucide-react";
+import { PlusIcon, ChevronDownIcon } from "lucide-react";
 import { apiClient } from "@/src/lib/apiClient";
 import Cookies from "js-cookie";
+import { nodeTemplates } from "@/src/types/types";
+import { transformWorkflowData } from "@/src/lib/transformNode";
 
 const nodeTypes: NodeTypes = {
   workflowNode: WorkflowNode,
@@ -43,39 +45,6 @@ const initialNodes: Node<WorkflowNodeData>[] = [
 
 const initialEdges: Edge[] = [];
 
-const nodeTemplates = [
-  {
-    type: "task",
-    label: "Process Task",
-    icon: "check-circle",
-    description: "Standard workflow task",
-  },
-  {
-    type: "condition",
-    label: "Decision",
-    icon: "git-branch",
-    description: "Evaluate conditions",
-  },
-  {
-    type: "api",
-    label: "API Call",
-    icon: "cloud",
-    description: "External API integration",
-  },
-  {
-    type: "data",
-    label: "Data Store",
-    icon: "database",
-    description: "Store or retrieve data",
-  },
-  {
-    type: "end",
-    label: "End Process",
-    icon: "square",
-    description: "Terminate the workflow",
-  },
-];
-
 const WorkflowBuilder: React.FC = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -90,81 +59,6 @@ const WorkflowBuilder: React.FC = () => {
     nodes: Node[];
     edges: Edge[];
   }>({ nodes: [], edges: [] });
-  const [showDeleteTooltip, setShowDeleteTooltip] = useState(false);
-
-  const processTaskRelationships = useCallback(
-    (nodes: Node[], edges: Edge[]) => {
-      const nodeMap = new Map();
-
-      // First pass: initialize all task nodes
-      nodes.forEach((node) => {
-        if (node.data.type === "task") {
-          nodeMap.set(node.id, {
-            node,
-            blockedBy: [],
-            blocking: [],
-          });
-        }
-      });
-
-      // Second pass: analyze edges to build relationships
-      edges.forEach((edge) => {
-        const sourceNode = nodes.find((n) => n.id === edge.source);
-        const targetNode = nodes.find((n) => n.id === edge.target);
-
-        if (
-          sourceNode?.data.type === "task" &&
-          targetNode?.data.type === "task"
-        ) {
-          // Source task is blocking target task
-          const sourceData = nodeMap.get(sourceNode.id);
-          const targetData = nodeMap.get(targetNode.id);
-
-          if (sourceData && targetData) {
-            // Add blocking relationship
-            sourceData.blocking.push({
-              id: targetNode.id,
-              name: targetNode.data.label,
-              description: targetNode.data.description,
-            });
-
-            // Add blockedBy relationship
-            targetData.blockedBy.push({
-              id: sourceNode.id,
-              name: sourceNode.data.label,
-              description: sourceNode.data.description,
-            });
-          }
-        }
-      });
-
-      // Final pass: update nodes with relationship data
-      return nodes.map((node) => {
-        if (nodeMap.has(node.id)) {
-          const nodeData = nodeMap.get(node.id);
-          const config =
-            typeof node.data.config === "string"
-              ? JSON.parse(node.data.config)
-              : node.data.config || {};
-
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              config: {
-                ...config,
-                userIds: config.userIds || [],
-                blockedBy: nodeData.blockedBy,
-                blocking: nodeData.blocking,
-              },
-            },
-          };
-        }
-        return node;
-      });
-    },
-    [],
-  );
 
   useEffect(() => {
     const fetchWorkflow = async () => {
@@ -317,7 +211,6 @@ const WorkflowBuilder: React.FC = () => {
   const onSelectionChange = useCallback(
     ({ nodes, edges }: { nodes: Node[]; edges: Edge[] }) => {
       setSelectedElements({ nodes, edges });
-      setShowDeleteTooltip(nodes.length > 0 || edges.length > 0);
     },
     [],
   );
@@ -338,7 +231,6 @@ const WorkflowBuilder: React.FC = () => {
         ),
       );
       setSelectedElements({ nodes: [], edges: [] });
-      setShowDeleteTooltip(false);
     }
   }, [selectedElements, setNodes, setEdges]);
 
@@ -360,40 +252,10 @@ const WorkflowBuilder: React.FC = () => {
 
   const handleDraft = async () => {
     try {
-      const processedNodes = processTaskRelationships(nodes, edges);
-      const transformedNodes = processedNodes.map((node) => ({
-        id: node.id,
-        type: node.type,
-        positionX: node.position.x,
-        positionY: node.position.y,
-        positionAbsoluteX: node.position.x,
-        positionAbsoluteY: node.position.y,
-        width: node.width || 225,
-        height: node.height || 66,
-        selected: node.selected || false,
-        dragging: node.dragging || false,
-        data: {
-          label: node.data.label,
-          type: node.data.type,
-          description: node.data.description,
-          icon: node.data.icon,
-          config: JSON.stringify(node.data.config || {}),
-        },
-      }));
-
-      const transformedEdges = edges.map((edge) => ({
-        id: edge.id,
-        type: edge.type,
-        source: edge.source,
-        target: edge.target,
-        sourceHandle: edge.sourceHandle,
-        targetHandle: edge.targetHandle,
-        animated: edge.animated || false,
-        style: JSON.stringify({
-          stroke: edge.style?.stroke || "#4f46e5",
-          strokeWidth: edge.style?.strokeWidth || 2,
-        }),
-      }));
+      const { transformedNodes, transformedEdges } = transformWorkflowData(
+        nodes,
+        edges,
+      );
 
       const response = await apiClient("/api/workflow", {
         method: "POST",
@@ -420,41 +282,10 @@ const WorkflowBuilder: React.FC = () => {
 
   const publishWorkflow = async () => {
     try {
-      const processedNodes = processTaskRelationships(nodes, edges);
-      const transformedNodes = processedNodes.map((node) => ({
-        id: node.id,
-        type: node.type,
-        positionX: node.position.x,
-        positionY: node.position.y,
-        positionAbsoluteX: node.position.x,
-        positionAbsoluteY: node.position.y,
-        width: node.width || 225,
-        height: node.height || 66,
-        selected: node.selected || false,
-        dragging: node.dragging || false,
-        data: {
-          label: node.data.label,
-          type: node.data.type,
-          description: node.data.description,
-          icon: node.data.icon,
-          config: JSON.stringify(node.data.config || {}),
-        },
-      }));
-
-      const transformedEdges = edges.map((edge) => ({
-        id: edge.id,
-        type: edge.type,
-        source: edge.source,
-        target: edge.target,
-        sourceHandle: edge.sourceHandle,
-        targetHandle: edge.targetHandle,
-        animated: edge.animated || false,
-        style: JSON.stringify({
-          stroke: edge.style?.stroke || "#4f46e5",
-          strokeWidth: edge.style?.strokeWidth || 2,
-        }),
-      }));
-
+      const { transformedNodes, transformedEdges } = transformWorkflowData(
+        nodes,
+        edges,
+      );
       const projectId = Cookies.get("activeProjectId");
 
       const response = await apiClient(`/api/workflow/${projectId}/publish`, {
@@ -482,40 +313,10 @@ const WorkflowBuilder: React.FC = () => {
 
   const updateDraft = async () => {
     try {
-      const processedNodes = processTaskRelationships(nodes, edges);
-      const transformedNodes = processedNodes.map((node) => ({
-        id: node.id,
-        type: node.type,
-        positionX: node.position.x,
-        positionY: node.position.y,
-        positionAbsoluteX: node.position.x,
-        positionAbsoluteY: node.position.y,
-        width: node.width || 225,
-        height: node.height || 66,
-        selected: node.selected || false,
-        dragging: node.dragging || false,
-        data: {
-          label: node.data.label,
-          type: node.data.type,
-          description: node.data.description,
-          icon: node.data.icon,
-          config: JSON.stringify(node.data.config || {}),
-        },
-      }));
-
-      const transformedEdges = edges.map((edge) => ({
-        id: edge.id,
-        type: edge.type,
-        source: edge.source,
-        target: edge.target,
-        sourceHandle: edge.sourceHandle,
-        targetHandle: edge.targetHandle,
-        animated: edge.animated || false,
-        style: JSON.stringify({
-          stroke: edge.style?.stroke || "#4f46e5",
-          strokeWidth: edge.style?.strokeWidth || 2,
-        }),
-      }));
+      const { transformedNodes, transformedEdges } = transformWorkflowData(
+        nodes,
+        edges,
+      );
 
       const response = await apiClient("/api/workflow", {
         method: "PUT", // Use PUT for update
@@ -572,29 +373,6 @@ const WorkflowBuilder: React.FC = () => {
             />
             <Controls />
             <Background gap={24} />
-
-            {/* Add Delete Action Panel */}
-            {showDeleteTooltip && (
-              <Panel position="bottom-center" className="mb-8">
-                <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200 flex items-center gap-3 animate-fade-in">
-                  <Trash2Icon size={18} className="text-red-500" />
-                  <div className="text-sm text-gray-700">
-                    <span className="font-medium">
-                      {selectedElements.nodes.length} node
-                      {selectedElements.nodes.length !== 1 ? "s" : ""} and{" "}
-                      {selectedElements.edges.length} edge
-                      {selectedElements.edges.length !== 1 ? "s" : ""} selected
-                    </span>
-                  </div>
-                  <button
-                    onClick={deleteSelectedElements}
-                    className="ml-2 px-3 py-1 bg-red-100 text-red-700 text-sm font-medium rounded-md hover:bg-red-200 transition-colors"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </Panel>
-            )}
 
             <Panel
               position="top-center"
@@ -707,23 +485,6 @@ const WorkflowBuilder: React.FC = () => {
           </ReactFlow>
         )}
       </div>
-
-      {/* CSS for animations */}
-      <style jsx global>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fade-in {
-          animation: fadeIn 0.3s ease-out forwards;
-        }
-      `}</style>
     </div>
   );
 };

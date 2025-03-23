@@ -155,6 +155,9 @@ export default function SignupForm() {
             "Your account has been successfully created! Check your email for verification.",
         });
         setToastOpen(true);
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 2000);
       }
     } catch {
       setToastMessage({
