@@ -52,12 +52,9 @@ export function NotificationPanel() {
     const userId = Cookies.get("userId");
     if (!userId) return;
 
-    const socketInstance = io(
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
-      {
-        query: { userId },
-      },
-    );
+    const socketInstance = io("http://localhost:8000/notification", {
+      query: { userId },
+    });
 
     socketInstance.on("connect", () => {
       console.log("Connected to notification system");

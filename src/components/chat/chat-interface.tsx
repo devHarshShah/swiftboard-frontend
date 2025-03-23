@@ -51,7 +51,7 @@ export default function ChatInterface({
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { socket } = useWebSocket();
+  const { chatSocket } = useWebSocket();
 
   // Scroll to bottom whenever messages change
   useEffect(() => {
@@ -68,13 +68,13 @@ export default function ChatInterface({
       setIsSending(false); // Reset sending state
     }
 
-    if (!socket || !receiverId) return;
+    if (!chatSocket || !receiverId) return;
 
     // Create room name using the same format as the backend
     const roomName = [userId, receiverId].sort().join("-");
 
     // Join new room
-    socket.emit("joinRoom", { userId, receiverId, roomName });
+    chatSocket.emit("joinRoom", { userId, receiverId, roomName });
 
     // Handle successful room join
     interface JoinRoomSuccessData {
@@ -121,8 +121,8 @@ export default function ChatInterface({
     };
 
     // Listen for events
-    socket.on("joinRoomSuccess", handleJoinRoomSuccess);
-    socket.on("newMessage", handleNewMessage);
+    chatSocket.on("joinRoomSuccess", handleJoinRoomSuccess);
+    chatSocket.on("newMessage", handleNewMessage);
 
     // Load previous messages for this conversation
     const loadMessages = async () => {
@@ -147,13 +147,13 @@ export default function ChatInterface({
 
     // Cleanup event listeners when component unmounts or receiverId changes
     return () => {
-      socket.off("joinRoomSuccess", handleJoinRoomSuccess);
-      socket.off("newMessage", handleNewMessage);
+      chatSocket.off("joinRoomSuccess", handleJoinRoomSuccess);
+      chatSocket.off("newMessage", handleNewMessage);
     };
-  }, [userId, receiverId, socket]);
+  }, [userId, receiverId, chatSocket]);
 
   const handleSendMessage = () => {
-    if (input.trim() === "" || !socket || !receiverId || isSending) return;
+    if (input.trim() === "" || !chatSocket || !receiverId || isSending) return;
 
     // Set sending state to prevent multiple sends
     setIsSending(true);
@@ -168,8 +168,8 @@ export default function ChatInterface({
     // Clear input field immediately
     setInput("");
 
-    // Send message via socket
-    socket.emit("sendMessage", messagePayload);
+    // Send message via chatSocket
+    chatSocket.emit("sendMessage", messagePayload);
   };
 
   // Handle file input change
