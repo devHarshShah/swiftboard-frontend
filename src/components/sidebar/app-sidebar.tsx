@@ -146,7 +146,7 @@ const data = {
       items: [
         {
           title: "Workflow Builder",
-          url: "#",
+          url: "/dashboard/workflow",
         },
         {
           title: "App Integrations",

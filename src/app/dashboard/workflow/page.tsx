@@ -20,6 +20,7 @@ import { v4 as uuidv4 } from "uuid";
 import { WorkflowNodeData } from "@/src/types/types";
 import { PlusIcon, ChevronDownIcon, Trash2Icon } from "lucide-react";
 import { apiClient } from "@/src/lib/apiClient";
+import Cookies from "js-cookie";
 
 const nodeTypes: NodeTypes = {
   workflowNode: WorkflowNode,
@@ -90,6 +91,80 @@ const WorkflowBuilder: React.FC = () => {
     edges: Edge[];
   }>({ nodes: [], edges: [] });
   const [showDeleteTooltip, setShowDeleteTooltip] = useState(false);
+
+  const processTaskRelationships = useCallback(
+    (nodes: Node[], edges: Edge[]) => {
+      const nodeMap = new Map();
+
+      // First pass: initialize all task nodes
+      nodes.forEach((node) => {
+        if (node.data.type === "task") {
+          nodeMap.set(node.id, {
+            node,
+            blockedBy: [],
+            blocking: [],
+          });
+        }
+      });
+
+      // Second pass: analyze edges to build relationships
+      edges.forEach((edge) => {
+        const sourceNode = nodes.find((n) => n.id === edge.source);
+        const targetNode = nodes.find((n) => n.id === edge.target);
+
+        if (
+          sourceNode?.data.type === "task" &&
+          targetNode?.data.type === "task"
+        ) {
+          // Source task is blocking target task
+          const sourceData = nodeMap.get(sourceNode.id);
+          const targetData = nodeMap.get(targetNode.id);
+
+          if (sourceData && targetData) {
+            // Add blocking relationship
+            sourceData.blocking.push({
+              id: targetNode.id,
+              name: targetNode.data.label,
+              description: targetNode.data.description,
+            });
+
+            // Add blockedBy relationship
+            targetData.blockedBy.push({
+              id: sourceNode.id,
+              name: sourceNode.data.label,
+              description: sourceNode.data.description,
+            });
+          }
+        }
+      });
+
+      // Final pass: update nodes with relationship data
+      return nodes.map((node) => {
+        if (nodeMap.has(node.id)) {
+          const nodeData = nodeMap.get(node.id);
+          const config =
+            typeof node.data.config === "string"
+              ? JSON.parse(node.data.config)
+              : node.data.config || {};
+
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              config: {
+                ...config,
+                userIds: config.userIds || [],
+                blockedBy: nodeData.blockedBy,
+                blocking: nodeData.blocking,
+              },
+            },
+          };
+        }
+        return node;
+      });
+    },
+    [],
+  );
 
   useEffect(() => {
     const fetchWorkflow = async () => {
@@ -284,10 +359,9 @@ const WorkflowBuilder: React.FC = () => {
   }, [selectedElements, deleteSelectedElements]);
 
   const handleDraft = async () => {
-    const name = "Test";
-    console.log({ name, nodes, edges });
     try {
-      const transformedNodes = nodes.map((node) => ({
+      const processedNodes = processTaskRelationships(nodes, edges);
+      const transformedNodes = processedNodes.map((node) => ({
         id: node.id,
         type: node.type,
         positionX: node.position.x,
@@ -344,9 +418,72 @@ const WorkflowBuilder: React.FC = () => {
     }
   };
 
+  const publishWorkflow = async () => {
+    try {
+      const processedNodes = processTaskRelationships(nodes, edges);
+      const transformedNodes = processedNodes.map((node) => ({
+        id: node.id,
+        type: node.type,
+        positionX: node.position.x,
+        positionY: node.position.y,
+        positionAbsoluteX: node.position.x,
+        positionAbsoluteY: node.position.y,
+        width: node.width || 225,
+        height: node.height || 66,
+        selected: node.selected || false,
+        dragging: node.dragging || false,
+        data: {
+          label: node.data.label,
+          type: node.data.type,
+          description: node.data.description,
+          icon: node.data.icon,
+          config: JSON.stringify(node.data.config || {}),
+        },
+      }));
+
+      const transformedEdges = edges.map((edge) => ({
+        id: edge.id,
+        type: edge.type,
+        source: edge.source,
+        target: edge.target,
+        sourceHandle: edge.sourceHandle,
+        targetHandle: edge.targetHandle,
+        animated: edge.animated || false,
+        style: JSON.stringify({
+          stroke: edge.style?.stroke || "#4f46e5",
+          strokeWidth: edge.style?.strokeWidth || 2,
+        }),
+      }));
+
+      const projectId = Cookies.get("activeProjectId");
+
+      const response = await apiClient(`/api/workflow/${projectId}/publish`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          nodes: transformedNodes,
+          edges: transformedEdges,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to publish workflow");
+      }
+
+      const data = await response.json();
+      console.log("Workflow published:", data);
+    } catch (error) {
+      console.error("Error publishing workflow:", error);
+    }
+  };
+
   const updateDraft = async () => {
     try {
-      const transformedNodes = nodes.map((node) => ({
+      const processedNodes = processTaskRelationships(nodes, edges);
+      const transformedNodes = processedNodes.map((node) => ({
         id: node.id,
         type: node.type,
         positionX: node.position.x,
@@ -561,9 +698,7 @@ const WorkflowBuilder: React.FC = () => {
                 )}
                 <button
                   className="px-4 py-2 text-sm bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 transition-colors"
-                  onClick={() => {
-                    console.log("Publishing workflow");
-                  }}
+                  onClick={publishWorkflow}
                 >
                   Publish
                 </button>

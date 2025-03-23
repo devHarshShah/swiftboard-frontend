@@ -13,6 +13,7 @@ import {
   Database,
   ListTodo,
   Check,
+  Lock,
 } from "lucide-react";
 import { UserSelector } from "./kanban/user-selector";
 import { apiClient } from "../lib/apiClient";
@@ -59,6 +60,7 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
     conditionType: data.config?.conditionType || "Expression",
     userIds: data.config?.userIds || [],
     blockedBy: data.config?.blockedBy || [],
+    blocking: data.config?.blocking || [],
   });
 
   // Handle input changes
@@ -72,12 +74,13 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
     }));
   };
 
-  // Check for upstream task nodes
+  // Check for upstream and downstream task nodes
   useEffect(() => {
     if (data.type === "task") {
       const edges = getEdges();
-      const incomingEdges = edges.filter((edge) => edge.target === id);
 
+      // Find nodes that this task is blocked by (incoming edges)
+      const incomingEdges = edges.filter((edge) => edge.target === id);
       const blockedByNodes = incomingEdges
         .map((edge) => {
           const sourceNode = getNode(edge.source);
@@ -92,24 +95,53 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
         })
         .filter(Boolean);
 
+      // Find nodes that this task is blocking (outgoing edges)
+      const outgoingEdges = edges.filter((edge) => edge.source === id);
+      const blockingNodes = outgoingEdges
+        .map((edge) => {
+          const targetNode = getNode(edge.target);
+          if (targetNode && targetNode.data.type === "task") {
+            return {
+              id: targetNode.id,
+              name: targetNode.data.label,
+              description: targetNode.data.description,
+            };
+          }
+          return null;
+        })
+        .filter(Boolean);
+
       // Update local data with blocked by nodes
-      if (blockedByNodes.length > 0) {
+      if (blockedByNodes.length > 0 || blockingNodes.length > 0) {
         setLocalData((prev) => {
-          // Check if nodes already exist in blockedBy
-          const existingIds: string[] = prev.blockedBy.map(
+          // Handle blockedBy relationship
+          const existingBlockedByIds: string[] = prev.blockedBy.map(
             (task: { id: string }) => task.id,
           );
           const newBlockedBy = [
             ...prev.blockedBy,
             ...blockedByNodes.filter(
               (node): node is NonNullable<typeof node> =>
-                node !== null && !existingIds.includes(node.id),
+                node !== null && !existingBlockedByIds.includes(node.id),
+            ),
+          ];
+
+          // Handle blocking relationship
+          const existingBlockingIds: string[] = prev.blocking
+            ? prev.blocking.map((task: { id: string }) => task.id)
+            : [];
+          const newBlocking = [
+            ...(prev.blocking || []),
+            ...blockingNodes.filter(
+              (node): node is NonNullable<typeof node> =>
+                node !== null && !existingBlockingIds.includes(node.id),
             ),
           ];
 
           return {
             ...prev,
             blockedBy: newBlockedBy,
+            blocking: newBlocking,
           };
         });
       }
@@ -127,6 +159,7 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
           data.type === "condition" ? localData.conditionType : undefined,
         userIds: data.type === "task" ? localData.userIds : undefined,
         blockedBy: data.type === "task" ? localData.blockedBy : undefined,
+        blocking: data.type === "task" ? localData.blocking : undefined,
       },
     };
 
@@ -150,6 +183,7 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
       userIds: updatedUserIds,
     }));
   };
+
   const getSelectedUsers = () => {
     const selectedUserIds = localData.userIds || [];
     return selectedUserIds
@@ -237,6 +271,12 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
     ((data.config?.blockedBy && data.config.blockedBy.length > 0) ||
       (localData.blockedBy && localData.blockedBy.length > 0));
 
+  // Display blocking badge if task node is blocking other tasks
+  const isBlocking =
+    data.type === "task" &&
+    ((data.config?.blocking && data.config.blocking.length > 0) ||
+      (localData.blocking && localData.blocking.length > 0));
+
   return (
     <>
       {data.type !== "start" && (
@@ -268,7 +308,7 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
           </button>
         </div>
 
-        {(hasAssignments || hasBlockers) && (
+        {(hasAssignments || hasBlockers || isBlocking) && (
           <div className="flex gap-2 mt-1 ml-8">
             {hasAssignments && (
               <div className="bg-teal-100 text-teal-800 text-xs px-2 py-0.5 rounded-full flex items-center">
@@ -280,6 +320,12 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
               <div className="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded-full flex items-center">
                 <CircleAlert size={12} className="mr-1" />
                 {localData.blockedBy.length}
+              </div>
+            )}
+            {isBlocking && (
+              <div className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full flex items-center">
+                <Lock size={12} className="mr-1" />
+                {localData.blocking.length}
               </div>
             )}
           </div>
@@ -349,7 +395,7 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
                       Assign Users
                     </label>
                     <UserSelector
-                      users={users} // You'll need to provide actual users here
+                      users={users}
                       selectedUsers={getSelectedUsers()}
                       onToggleUser={handleUserToggle}
                       searchQuery={userSearchQuery}
@@ -370,6 +416,27 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
                           <div
                             key={task.id}
                             className="bg-orange-100 text-orange-800 text-xs px-2 py-0.5 rounded-full flex items-center"
+                          >
+                            {task.name}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Blocking
+                    </label>
+                    <div className="text-xs text-gray-500 mb-1">
+                      Auto-detected: {localData.blocking?.length || 0} tasks
+                    </div>
+                    {localData.blocking && localData.blocking.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {localData.blocking.map((task: Task) => (
+                          <div
+                            key={task.id}
+                            className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full flex items-center"
                           >
                             {task.name}
                           </div>
