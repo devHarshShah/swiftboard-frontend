@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { ChevronsUpDown, Plus, Users } from "lucide-react";
-import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 
 import {
   DropdownMenu,
@@ -21,39 +21,18 @@ import {
 } from "@/src/components/ui/sidebar";
 
 import { AvatarFallback, Avatar } from "../ui/avatar";
-
 import { useModal } from "../modal-provider";
-
-import { useRouter } from "next/navigation";
+import { useAppContext } from "@/src/contexts/app-context";
 
 function getProjectLogo(name: string) {
   return name.slice(0, 2).toUpperCase();
 }
 
-export function ProjectSwitcher({
-  projects,
-}: {
-  projects: {
-    id: string;
-    name: string;
-    teamId: string;
-    createdAt: string;
-    updatedAt: string;
-  }[];
-}) {
+export function ProjectSwitcher() {
   const { isMobile } = useSidebar();
-  const [activeProject, setActiveProject] = React.useState(
-    projects.length > 0 ? projects[0] : null,
-  );
-
+  const { projects, activeProject, setActiveProject } = useAppContext();
   const router = useRouter();
-
-  React.useEffect(() => {
-    if (projects.length > 0) {
-      setActiveProject(projects[0]);
-      Cookies.set("activeProjectId", projects[0].id);
-    }
-  }, [projects]);
+  const { openModal } = useModal();
 
   const handleProjectSelect = (project: {
     id: string;
@@ -63,11 +42,8 @@ export function ProjectSwitcher({
     updatedAt: string;
   }) => {
     setActiveProject(project);
-    Cookies.set("activeProjectId", project.id);
     router.refresh();
   };
-
-  const { openModal } = useModal();
 
   // Function to handle creating a new project
   const handleCreateProject = () => {

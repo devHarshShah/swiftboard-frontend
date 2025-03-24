@@ -10,8 +10,8 @@ import {
   Bot,
   Paperclip,
   Mic,
-  Image,
   MessageSquare,
+  ImageIcon,
 } from "lucide-react";
 import { useWebSocket } from "@/src/contexts/websocket-context";
 import { apiClient } from "@/src/lib/apiClient";
@@ -222,7 +222,7 @@ export default function ChatInterface({
         </div>
         <div>
           <Button variant="ghost" size="sm" className="rounded-full">
-            <Image className="h-5 w-5" />
+            <ImageIcon className="h-5 w-5" />
           </Button>
         </div>
       </div>

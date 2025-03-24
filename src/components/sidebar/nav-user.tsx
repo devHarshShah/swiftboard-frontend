@@ -29,6 +29,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/src/components/ui/sidebar";
+import { User } from "@/src/types/types";
 
 function getInitials(name: string) {
   const words = name.split(" ");
@@ -39,15 +40,7 @@ function getInitials(name: string) {
   return initials.toUpperCase();
 }
 
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string;
-    email: string;
-    avatar: string;
-  };
-}) {
+export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar();
 
   return (

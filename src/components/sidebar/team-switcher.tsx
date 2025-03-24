@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { ChevronsUpDown, Plus, Users } from "lucide-react";
-import Cookies from "js-cookie";
 
 import {
   DropdownMenu,
@@ -21,38 +20,17 @@ import {
 } from "@/src/components/ui/sidebar";
 
 import { AvatarFallback, Avatar } from "../ui/avatar";
-
 import { useModal } from "../modal-provider";
+import { useAppContext } from "@/src/contexts/app-context";
 
 function getTeamLogo(name: string) {
   return name.slice(0, 2).toUpperCase();
 }
 
-export function TeamSwitcher({
-  teams,
-}: {
-  teams: {
-    team: {
-      id: string;
-      name: string;
-      createdAt: string;
-      updatedAt: string;
-    };
-    role: string;
-    status: string;
-  }[];
-}) {
+export function TeamSwitcher() {
   const { isMobile } = useSidebar();
-  const [activeTeam, setActiveTeam] = React.useState(
-    teams.length > 0 ? teams[0].team : null,
-  );
-
-  React.useEffect(() => {
-    if (teams.length > 0) {
-      setActiveTeam(teams[0].team);
-      Cookies.set("activeTeamId", teams[0].team.id);
-    }
-  }, [teams]);
+  const { teams, activeTeam, setActiveTeam } = useAppContext();
+  const { openModal } = useModal();
 
   const handleTeamSelect = (team: {
     id: string;
@@ -61,10 +39,7 @@ export function TeamSwitcher({
     updatedAt: string;
   }) => {
     setActiveTeam(team);
-    Cookies.set("activeTeamId", team.id);
   };
-
-  const { openModal } = useModal();
 
   // Function to handle creating a new team
   const handleCreateTeam = () => {

@@ -135,3 +135,37 @@ export interface ColumnDefinition {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   cell: (props: { row: any }) => React.ReactNode;
 }
+
+export interface Team {
+  team: {
+    id: string;
+    name: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+  role: string;
+  status: string;
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  teamId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+}
+
+// Types for team members
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+}

@@ -4,15 +4,9 @@ import { Input } from "@/src/components/ui/input";
 import { Avatar } from "@/src/components/ui/avatar";
 import { Search, Plus, Settings } from "lucide-react";
 import { apiClient } from "@/src/lib/apiClient";
-import Cookies from "js-cookie";
 import { User } from "@/src/types/types";
-
-// Types for team members
-interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-}
+import { useAppContext } from "@/src/contexts/app-context";
+import { TeamMember } from "@/src/types/types";
 
 export default function Sidebar({
   onSelectConversation,
@@ -22,7 +16,10 @@ export default function Sidebar({
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeConversation, setActiveConversation] = useState("");
-  const teamId = Cookies.get("activeTeamId");
+
+  // Use context instead of cookies
+  const { activeTeam } = useAppContext();
+  const teamId = activeTeam?.id;
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -44,7 +41,7 @@ export default function Sidebar({
     };
 
     fetchMembers();
-  }, [teamId]);
+  }, [teamId]); // Add teamId as dependency so it refetches when team changes
 
   const filteredMembers = members.filter(
     (member) =>

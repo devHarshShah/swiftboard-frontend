@@ -24,6 +24,8 @@ import {
   SidebarHeader,
 } from "@/src/components/ui/sidebar";
 
+import { User, Team, Project } from "@/src/types/types";
+
 const data = {
   navMain: [
     {
@@ -205,23 +207,11 @@ const data = {
 
 export function AppSidebar({
   user,
-  teams,
-  projects,
   ...props
 }: {
-  user: { name: string; email: string; avatar: string };
-  teams: {
-    team: { id: string; name: string; createdAt: string; updatedAt: string };
-    role: string;
-    status: string;
-  }[];
-  projects: {
-    id: string;
-    name: string;
-    teamId: string;
-    createdAt: string;
-    updatedAt: string;
-  }[];
+  user: User;
+  teams: Team[];
+  projects: Project[];
 } & React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar
@@ -231,9 +221,9 @@ export function AppSidebar({
       className="overflow-auto scrollbar-custom"
     >
       <SidebarHeader>
-        <TeamSwitcher teams={teams} />
+        <TeamSwitcher />
         <div className="mt-2">
-          <ProjectSwitcher projects={projects} />
+          <ProjectSwitcher />
         </div>
       </SidebarHeader>
       <SidebarContent>
