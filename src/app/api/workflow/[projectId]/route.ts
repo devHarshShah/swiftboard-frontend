@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(request: NextRequest) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ projectId: string }> },
+) {
   try {
     const accessToken = request.cookies.get("access_token")?.value;
+    const { projectId } = await params;
 
     if (!accessToken) {
       return NextResponse.json(
@@ -14,7 +18,7 @@ export async function POST(request: NextRequest) {
     const { name, nodes, edges } = await request.json();
 
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-    const response = await fetch(`${baseUrl}/workflow`, {
+    const response = await fetch(`${baseUrl}/workflow/${projectId}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -46,9 +50,13 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ projectId: string }> },
+) {
   try {
     const accessToken = request.cookies.get("access_token")?.value;
+    const { projectId } = await params;
 
     if (!accessToken) {
       return NextResponse.json(
@@ -58,8 +66,7 @@ export async function GET(request: NextRequest) {
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-    const id = "cm8fwpg0u0001t1njiwgw307h";
-    const response = await fetch(`${baseUrl}/workflow/${id}`, {
+    const response = await fetch(`${baseUrl}/workflow/${projectId}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -84,9 +91,13 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ projectId: string }> },
+) {
   try {
     const accessToken = request.cookies.get("access_token")?.value;
+    const { projectId } = await params;
 
     if (!accessToken) {
       return NextResponse.json(
@@ -96,10 +107,9 @@ export async function PUT(request: NextRequest) {
     }
 
     const { name, nodes, edges } = await request.json();
-    const id = "cm8fwpg0u0001t1njiwgw307h"; // Hardcoded ID for now
 
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-    const response = await fetch(`${baseUrl}/workflow/${id}`, {
+    const response = await fetch(`${baseUrl}/workflow/${projectId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

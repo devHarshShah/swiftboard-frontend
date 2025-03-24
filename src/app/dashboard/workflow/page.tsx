@@ -59,15 +59,29 @@ const WorkflowBuilder: React.FC = () => {
     nodes: Node[];
     edges: Edge[];
   }>({ nodes: [], edges: [] });
+  // Update the useEffect section for fetching workflow data
+
   const { activeProject } = useAppContext();
   const projectId = activeProject?.id;
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [waitingForProject, setWaitingForProject] = useState(false);
+
   useEffect(() => {
+    // Only fetch if we have a valid projectId
+    if (!projectId) {
+      setWaitingForProject(true);
+      return; // Exit early if projectId is not available
+    }
+
+    setWaitingForProject(false);
+
     const fetchWorkflow = async () => {
+      setIsLoading(true);
       try {
-        const response = await apiClient("/api/workflow");
+        const response = await apiClient(`/api/workflow/${projectId}`);
         if (!response.ok) {
-          throw new Error("Failed to fetch workflow");
+          throw new Error(`Failed to fetch workflow: ${response.statusText}`);
         }
 
         const data = await response.json();
@@ -133,8 +147,7 @@ const WorkflowBuilder: React.FC = () => {
     };
 
     fetchWorkflow();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [projectId]); // Add projectId to the dependency array
 
   useEffect(() => {
     const handleNodeUpdate = (event: CustomEvent) => {
@@ -259,7 +272,7 @@ const WorkflowBuilder: React.FC = () => {
         edges,
       );
 
-      const response = await apiClient("/api/workflow", {
+      const response = await apiClient(`/api/workflow/${projectId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -319,7 +332,7 @@ const WorkflowBuilder: React.FC = () => {
         edges,
       );
 
-      const response = await apiClient("/api/workflow", {
+      const response = await apiClient(`/api/workflow/${projectId}`, {
         method: "PUT", // Use PUT for update
         headers: {
           "Content-Type": "application/json",
