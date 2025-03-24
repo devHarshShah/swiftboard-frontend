@@ -7,6 +7,7 @@ import BreadCrumbs from "@/src/components/sidebar/breadcrumbs";
 import { ModalProvider } from "@/src/components/modal-provider";
 import ModalContainer from "@/src/components/modals/modal.container";
 import { AppProvider, useAppContext } from "@/src/contexts/app-context";
+import { ToastProvider } from "@/src/contexts/toast-context";
 
 // This component uses the context
 function AppContent({ children }: { children: React.ReactNode }) {
@@ -18,12 +19,14 @@ function AppContent({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      {user && <AppSidebar user={user} teams={teams} projects={projects} />}
-      <SidebarInset>
-        <BreadCrumbs />
-        <main className="w-full">{children}</main>
-      </SidebarInset>
-      <ModalContainer />
+      <ToastProvider>
+        {user && <AppSidebar user={user} teams={teams} projects={projects} />}
+        <SidebarInset>
+          <BreadCrumbs />
+          <main className="w-full">{children}</main>
+        </SidebarInset>
+        <ModalContainer />
+      </ToastProvider>
     </>
   );
 }

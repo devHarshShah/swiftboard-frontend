@@ -33,11 +33,11 @@ export const TaskColumn: React.FC<TaskColumnProps> = ({
     <div
       className={cn(
         config[status].bgColor,
-        "rounded-xl p-4 w-full shadow-sm space-y-3 relative border",
+        "rounded-xl p-4 w-full shadow-sm flex flex-col border h-full",
         config[status].borderColor,
       )}
     >
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-4 flex-shrink-0">
         <h3
           className={cn(
             config[status].textColor,
@@ -61,7 +61,7 @@ export const TaskColumn: React.FC<TaskColumnProps> = ({
         )}
       </div>
 
-      <div className="space-y-3 overflow-y-auto scrollbar-custom">
+      <div className="space-y-3 overflow-y-auto scrollbar-custom flex-grow pr-1 max-h-[calc(100vh-220px)]">
         {children}
 
         {tasks.map((task) => (

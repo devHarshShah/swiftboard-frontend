@@ -162,7 +162,7 @@ const data = {
       items: [
         {
           title: "Real-Time Updates",
-          url: "#",
+          url: "/dashboard/notification",
         },
         {
           title: "Email Settings",
