@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
-import Cookies from "js-cookie";
 import { apiClient } from "@/src/lib/apiClient";
 import { TaskColumn } from "./task-coulmn";
 import { TaskForm } from "./task-form";
@@ -13,6 +12,7 @@ import {
   GroupedTasks,
   statusConfig,
 } from "@/src/types/types";
+import { useAppContext } from "@/src/contexts/app-context";
 
 const KanbanBoard: React.FC = () => {
   const [tasks, setTasks] = useState<GroupedTasks>({
@@ -31,8 +31,9 @@ const KanbanBoard: React.FC = () => {
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [users, setUsers] = useState<User[]>([]);
-  const projectId = Cookies.get("activeProjectId");
-  const teamId = Cookies.get("activeTeamId");
+  const { activeTeam, activeProject } = useAppContext();
+  const projectId = activeProject?.id;
+  const teamId = activeTeam?.id;
 
   const fetchUsers = useCallback(async () => {
     if (!teamId) return;

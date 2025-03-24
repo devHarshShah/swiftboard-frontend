@@ -20,7 +20,7 @@ import { v4 as uuidv4 } from "uuid";
 import { WorkflowNodeData } from "@/src/types/types";
 import { PlusIcon, ChevronDownIcon } from "lucide-react";
 import { apiClient } from "@/src/lib/apiClient";
-import Cookies from "js-cookie";
+import { useAppContext } from "@/src/contexts/app-context";
 import { nodeTemplates } from "@/src/types/types";
 import { transformWorkflowData } from "@/src/lib/transformNode";
 
@@ -59,6 +59,8 @@ const WorkflowBuilder: React.FC = () => {
     nodes: Node[];
     edges: Edge[];
   }>({ nodes: [], edges: [] });
+  const { activeProject } = useAppContext();
+  const projectId = activeProject?.id;
 
   useEffect(() => {
     const fetchWorkflow = async () => {
@@ -286,7 +288,6 @@ const WorkflowBuilder: React.FC = () => {
         nodes,
         edges,
       );
-      const projectId = Cookies.get("activeProjectId");
 
       const response = await apiClient(`/api/workflow/${projectId}/publish`, {
         method: "POST",

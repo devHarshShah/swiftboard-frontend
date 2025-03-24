@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import Cookies from "js-cookie";
 import {
   flexRender,
   getCoreRowModel,
@@ -64,6 +63,7 @@ import {
 import { apiClient } from "@/src/lib/apiClient";
 import { Task, TaskStatusKey, statusConfig, User } from "@/src/types/types";
 import { DateTimePicker } from "@/src/components/ui/date-timepicker";
+import { useAppContext } from "@/src/contexts/app-context";
 
 // Extended type to include additional properties for table rendering
 interface ExtendedTask extends Task {
@@ -80,8 +80,9 @@ const TaskListPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [blockingTaskSearchQuery, setBlockingTaskSearchQuery] = useState("");
-  const projectId = Cookies.get("activeProjectId");
-  const teamId = Cookies.get("activeTeamId");
+  const { activeTeam, activeProject } = useAppContext();
+  const projectId = activeProject?.id;
+  const teamId = activeTeam?.id;
 
   // Fetch users for the team
   const fetchUsers = useCallback(async () => {

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
 import io, { Socket } from "socket.io-client";
-import Cookies from "js-cookie";
+import { useAppContext } from "@/src/contexts/app-context";
 import {
   Popover,
   PopoverContent,
@@ -30,6 +30,8 @@ export function NotificationPanel() {
   const [unreadCount, setUnreadCount] = useState(0);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [open, setOpen] = useState(false);
+  const { user } = useAppContext();
+  const userId = user?.id;
 
   // Fetch initial notifications
   useEffect(() => {
@@ -49,7 +51,6 @@ export function NotificationPanel() {
 
   // Socket connection setup
   useEffect(() => {
-    const userId = Cookies.get("userId");
     if (!userId) return;
 
     const socketInstance = io("http://localhost:8000/notification", {

@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { UserSelector } from "./kanban/user-selector";
 import { apiClient } from "../lib/apiClient";
-import Cookies from "js-cookie";
+import { useAppContext } from "../contexts/app-context";
 
 interface Task {
   id: string;
@@ -34,7 +34,8 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const { getNode, getEdges } = useReactFlow();
   const [users, setUsers] = useState<User[]>([]);
-  const teamId = Cookies.get("activeTeamId");
+  const { activeTeam } = useAppContext();
+  const teamId = activeTeam?.id;
 
   const fetchUsers = useCallback(async () => {
     if (!teamId) return;
