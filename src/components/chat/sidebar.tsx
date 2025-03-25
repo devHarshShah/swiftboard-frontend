@@ -42,12 +42,16 @@ import { AnimatePresence, motion } from "framer-motion";
 
 export default function Sidebar({
   onSelectConversation,
+  activeConversationId,
 }: {
   onSelectConversation: (user: TeamMember) => void;
+  activeConversationId?: string; // Add this prop to track the active conversation
 }) {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeConversation, setActiveConversation] = useState("");
+  const [activeConversation, setActiveConversation] = useState(
+    activeConversationId || "",
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [showSearch, setShowSearch] = useState(false);
@@ -58,41 +62,77 @@ export default function Sidebar({
   const { chatSocket } = useWebSocket();
   const teamId = activeTeam?.id;
 
-  // Listen for online/offline status changes
+  // Fetch actual unread message counts
+  const fetchUnreadMessageCounts = React.useCallback(async () => {
+    if (!teamId || !currentUser?.id) return;
+
+    try {
+      const response = await apiClient(
+        `/api/messages/unread-counts?userId=${currentUser.id}&teamId=${teamId}`,
+      );
+      const unreadCounts = await response.json();
+
+      setMembers((prev) =>
+        prev.map((member) => ({
+          ...member,
+          // Keep the unread count at 0 if the conversation is active
+          unreadCount:
+            member.id === activeConversation ? 0 : unreadCounts[member.id] || 0,
+        })),
+      );
+    } catch (error) {
+      console.error("Failed to fetch unread message counts:", error);
+    }
+  }, [teamId, currentUser?.id, activeConversation]);
+
+  // Update activeConversation when the prop changes
+  useEffect(() => {
+    if (activeConversationId) {
+      setActiveConversation(activeConversationId);
+
+      // Clear unread messages for the active conversation
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.id === activeConversationId ? { ...m, unreadCount: 0 } : m,
+        ),
+      );
+    }
+  }, [activeConversationId]);
+
+  // Improved online status tracking
   useEffect(() => {
     if (!chatSocket) return;
 
-    // Handle user online status
-    const handleUserOnline = (userId: string) => {
-      setOnlineUsers((prev) => new Set(prev).add(userId));
+    const handleUserStatus = (userId: string, status: "online" | "offline") => {
+      console.log(`User ${status}:`, userId);
 
-      // Update the members array with the new online status
-      setMembers((prev) =>
-        prev.map((member) =>
-          member.id === userId ? { ...member, status: "online" } : member,
-        ),
-      );
-    };
+      setOnlineUsers((prev) => {
+        const updated = new Set(prev);
+        if (status === "online") {
+          updated.add(userId);
+        } else {
+          updated.delete(userId);
+        }
+        return updated;
+      });
 
-    // Handle user offline status
-    const handleUserOffline = (userId: string) => {
-      const newOnlineUsers = new Set(onlineUsers);
-      newOnlineUsers.delete(userId);
-      setOnlineUsers(newOnlineUsers);
-
-      // Update the members array with the new offline status
       setMembers((prev) =>
         prev.map((member) =>
           member.id === userId
             ? {
                 ...member,
-                status: "offline",
-                lastActive: new Date(), // Update last active time
+                status: status,
+                ...(status === "offline" && { lastActive: new Date() }),
               }
             : member,
         ),
       );
     };
+
+    const handleUserOnline = (userId: string) =>
+      handleUserStatus(userId, "online");
+    const handleUserOffline = (userId: string) =>
+      handleUserStatus(userId, "offline");
 
     // Handle new message notification
     const handleNewMessage = (message: {
@@ -100,9 +140,11 @@ export default function Sidebar({
       receiverId: string;
     }) => {
       // Only update unread count if message is for current user and not from current user
+      // AND if the conversation with the sender is not currently active
       if (
         message.receiverId === currentUser?.id &&
-        message.senderId !== currentUser?.id
+        message.senderId !== currentUser?.id &&
+        message.senderId !== activeConversation // Don't increment if conversation is active
       ) {
         setMembers((prev) =>
           prev.map((member) =>
@@ -119,30 +161,42 @@ export default function Sidebar({
     chatSocket.on("userOffline", handleUserOffline);
     chatSocket.on("newMessage", handleNewMessage);
 
+    // Request current online users on connect
+    const requestOnlineUsers = () => {
+      chatSocket.emit("getOnlineUsers");
+    };
+
     // When connecting, request the list of online users
-    chatSocket.emit("getOnlineUsers");
+    requestOnlineUsers();
 
     // Handle the response with all online users
     chatSocket.on("onlineUsers", (users: string[]) => {
-      setOnlineUsers(new Set(users));
+      console.log("Online users:", users);
+      const onlineSet = new Set(users);
+      setOnlineUsers(onlineSet);
 
       // Update all members with their online status
       setMembers((prev) =>
         prev.map((member) => ({
           ...member,
-          status: users.includes(member.id) ? "online" : "offline",
+          status: onlineSet.has(member.id) ? "online" : "offline",
         })),
       );
     });
+
+    // Handle connection and reconnection
+    chatSocket.on("connect", requestOnlineUsers);
 
     return () => {
       chatSocket.off("userOnline", handleUserOnline);
       chatSocket.off("userOffline", handleUserOffline);
       chatSocket.off("newMessage", handleNewMessage);
       chatSocket.off("onlineUsers");
+      chatSocket.off("connect", requestOnlineUsers);
     };
-  }, [chatSocket, currentUser?.id, onlineUsers]);
+  }, [chatSocket, currentUser?.id, activeConversation]);
 
+  // Fetch members and their statuses
   useEffect(() => {
     const fetchMembers = async () => {
       if (!teamId) return;
@@ -152,35 +206,46 @@ export default function Sidebar({
         const response = await apiClient(`/api/teams/${teamId}/members`);
         const data = await response.json();
 
+        // Filter out the current user from the list
+        const filteredData = data.filter(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (member: any) => member.user.id !== currentUser?.id,
+        );
+
         // Use the onlineUsers set to determine who's online
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const teamMembers = data.map((member: any) => ({
-          id: member.user.id,
-          name: member.user.name || member.user.email.split("@")[0],
-          email: member.user.email,
-          avatar: member.user.avatar,
-          role: member.role,
-          status: onlineUsers.has(member.user.id) ? "online" : "offline",
-          lastActive: new Date(
-            Date.now() - Math.floor(Math.random() * 24 * 60 * 60 * 1000),
-          ),
-          // Simulate unread messages for demo
-          unreadCount:
-            Math.random() > 0.7 ? Math.floor(Math.random() * 5) + 1 : 0,
-        }));
+        const teamMembers = filteredData.map((member: any) => {
+          const userId = member.user.id;
+          const isOnline = onlineUsers.has(userId);
+
+          return {
+            id: userId,
+            name: member.user.name || member.user.email.split("@")[0],
+            email: member.user.email,
+            avatar: member.user.avatar,
+            role: member.role,
+            status: isOnline ? "online" : "offline",
+            lastActive: new Date(
+              Date.now() - Math.floor(Math.random() * 24 * 60 * 60 * 1000),
+            ),
+            // Don't show unread count for active conversation
+            unreadCount: userId === activeConversation ? 0 : 0, // Initialize with 0 and fetch real counts separately
+          };
+        });
 
         // Sort: online first, then with unread messages, then alphabetically
         const sortedMembers = teamMembers.sort(
           (a: TeamMember, b: TeamMember) => {
             if (a.status === "online" && b.status !== "online") return -1;
             if (a.status !== "online" && b.status === "online") return 1;
-            if (a.unreadCount && !b.unreadCount) return -1;
-            if (!a.unreadCount && b.unreadCount) return 1;
             return a.name.localeCompare(b.name);
           },
         );
 
         setMembers(sortedMembers);
+
+        // After setting members, fetch unread counts
+        setTimeout(fetchUnreadMessageCounts, 100);
       } catch (error) {
         console.error("Failed to fetch team members:", error);
       } finally {
@@ -189,7 +254,24 @@ export default function Sidebar({
     };
 
     fetchMembers();
-  }, [teamId, onlineUsers]); // Add onlineUsers as dependency
+  }, [
+    teamId,
+    onlineUsers,
+    currentUser?.id,
+    activeConversation,
+    fetchUnreadMessageCounts,
+  ]);
+
+  // Fetch unread counts periodically
+  useEffect(() => {
+    // Initial fetch
+    fetchUnreadMessageCounts();
+
+    // Set up interval for periodic updates
+    const intervalId = setInterval(fetchUnreadMessageCounts, 30000); // Every 30 seconds
+
+    return () => clearInterval(intervalId);
+  }, [teamId, currentUser?.id, activeConversation, fetchUnreadMessageCounts]);
 
   const filteredMembers = members.filter((member) => {
     const matchesSearch =
@@ -473,24 +555,25 @@ export default function Sidebar({
                       <p className="text-xs truncate text-muted-foreground">
                         {member.role || "Team Member"}
                       </p>
-                      {member.unreadCount > 0 && (
-                        <motion.div
-                          initial={{ scale: 0.5 }}
-                          animate={{ scale: 1 }}
-                          transition={{
-                            type: "spring",
-                            stiffness: 500,
-                            damping: 25,
-                          }}
-                        >
-                          <Badge
-                            variant="secondary"
-                            className="ml-1 h-5 min-w-5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs"
+                      {member.unreadCount > 0 &&
+                        activeConversation !== member.id && (
+                          <motion.div
+                            initial={{ scale: 0.5 }}
+                            animate={{ scale: 1 }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 500,
+                              damping: 25,
+                            }}
                           >
-                            {member.unreadCount}
-                          </Badge>
-                        </motion.div>
-                      )}
+                            <Badge
+                              variant="secondary"
+                              className="ml-1 h-5 min-w-5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs"
+                            >
+                              {member.unreadCount}
+                            </Badge>
+                          </motion.div>
+                        )}
                     </div>
                   </div>
                 </div>

@@ -73,7 +73,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       chatSocketInstance.disconnect();
       notificationSocketInstance.disconnect();
     };
-  }, []);
+  }, [currentUser]);
 
   return (
     <WebSocketContext.Provider
