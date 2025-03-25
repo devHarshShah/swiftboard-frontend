@@ -1,6 +1,7 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import io, { Socket } from "socket.io-client";
+import { useAppContext } from "./app-context";
 
 interface WebSocketContextProps {
   chatSocket: typeof Socket | null;
@@ -27,13 +28,15 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   >(null);
   const [isChatConnected, setIsChatConnected] = useState(false);
   const [isNotificationConnected, setIsNotificationConnected] = useState(false);
+  const { user } = useAppContext();
+  const currentUser = user?.id;
 
   useEffect(() => {
     // Chat socket connection
     const chatSocketInstance = io("http://localhost:8000/chat", {
+      query: { userId: currentUser },
       transports: ["websocket"],
     });
-
     chatSocketInstance.on("connect", () => {
       setIsChatConnected(true);
       console.log("Chat socket connected");

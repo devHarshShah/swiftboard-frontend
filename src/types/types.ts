@@ -163,9 +163,13 @@ export interface User {
 }
 
 // Types for team members
-export interface TeamMember {
+export type TeamMember = {
   id: string;
   name: string;
   email: string;
-  avatar?: string;
-}
+  avatar: string;
+  role: string;
+  status: string;
+  lastActive: Date;
+  unreadCount: number;
+};

@@ -2,22 +2,19 @@
 import React, { useState } from "react";
 import Sidebar from "./sidebar";
 import ChatInterface from "./chat-interface";
-import { User } from "@/src/types/types";
+import { TeamMember } from "@/src/types/types";
 import { useAppContext } from "@/src/contexts/app-context";
 
 export default function ChatLayout() {
-  const [activeConversation, setActiveConversation] = useState<User | null>(
-    null,
-  );
+  const [activeConversation, setActiveConversation] =
+    useState<TeamMember | null>(null);
 
-  // Get the user from context instead of cookies
   const { user } = useAppContext();
 
-  const handleSelectConversation = (member: User) => {
+  const handleSelectConversation = (member: TeamMember) => {
     setActiveConversation(member);
   };
 
-  // Use the user.id from context
   const currentUserId = user?.id || "";
   const chatWithUserId = activeConversation?.id || null;
 
@@ -31,6 +28,7 @@ export default function ChatLayout() {
           userId={currentUserId}
           receiverId={chatWithUserId}
           user={activeConversation}
+          currentUser={user}
         />
       </div>
     </div>
