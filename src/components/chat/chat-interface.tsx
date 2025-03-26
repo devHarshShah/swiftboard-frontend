@@ -52,6 +52,7 @@ import {
 } from "@/src/components/ui/dropdown-menu";
 import { Badge } from "@/src/components/ui/badge";
 import { debounce } from "lodash";
+import Image from "next/image";
 
 type MessageType = "user" | "bot";
 
@@ -152,30 +153,35 @@ export default function ChatInterface({
   }, [messages]);
 
   // Typing indicator handlers
-  const emitStartTyping = useCallback(
-    debounce(() => {
+  const emitStartTyping = useCallback(() => {
+    const debouncedEmit = debounce(() => {
       if (chatSocket && receiverId) {
         chatSocket.emit("startTyping", {
           userId: userId,
           receiverId: receiverId,
         });
       }
-    }, 300),
-    [chatSocket, receiverId, userId],
-  );
+    }, 300);
 
-  const emitStopTyping = useCallback(
-    debounce(() => {
+    debouncedEmit();
+    return debouncedEmit;
+  }, [chatSocket, receiverId, userId]);
+
+  const emitStopTyping = useCallback(() => {
+    const debouncedEmit = debounce(() => {
       if (chatSocket && receiverId) {
         chatSocket.emit("stopTyping", {
           userId: userId,
           receiverId: receiverId,
         });
       }
-    }, 1000),
-    [chatSocket, receiverId, userId],
-  );
+    }, 1000);
 
+    debouncedEmit();
+    return debouncedEmit;
+  }, [chatSocket, receiverId, userId]);
+
+  // Handle input changes
   // Handle input changes
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -192,16 +198,16 @@ export default function ChatInterface({
         }
 
         // Set a new timeout to stop typing
-        const timeout = setTimeout(() => {
+        const newTimeout = setTimeout(() => {
           emitStopTyping();
         }, 3000);
 
-        setTypingTimeout(timeout);
+        setTypingTimeout(newTimeout);
       } else {
         emitStopTyping();
       }
     },
-    [emitStartTyping, emitStopTyping, typingTimeout],
+    [emitStartTyping, emitStopTyping, typingTimeout], // Remove typingTimeout from dependencies
   );
 
   // Memoize the fetchAttachmentUrl function to maintain stable reference
@@ -351,8 +357,6 @@ export default function ChatInterface({
 
     // Cleanup event listeners and timeouts when component unmounts
     return () => {
-      emitStartTyping.cancel();
-      emitStopTyping.cancel();
       if (typingTimeout) {
         clearTimeout(typingTimeout);
       }
@@ -364,14 +368,8 @@ export default function ChatInterface({
       chatSocket.off("userOnline");
       chatSocket.off("userOffline");
     };
-  }, [
-    userId,
-    receiverId,
-    chatSocket,
-    emitStartTyping,
-    emitStopTyping,
-    typingTimeout,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, receiverId, chatSocket]);
 
   // Replace the attachments useEffect with a more reliable implementation
   useEffect(() => {
@@ -529,9 +527,11 @@ export default function ChatInterface({
       if (isImage) {
         return (
           <div className="max-w-[200px] rounded-md overflow-hidden">
-            <img
+            <Image
               src={url}
               alt={attachment.filename}
+              width={200}
+              height={200}
               className="w-full h-auto object-cover cursor-pointer"
               onClick={() => window.open(url, "_blank")}
             />
@@ -663,10 +663,12 @@ export default function ChatInterface({
                           className="aspect-square bg-muted rounded-md overflow-hidden relative"
                         >
                           {attachmentUrls[imageAttachment.id] ? (
-                            <img
+                            <Image
                               src={attachmentUrls[imageAttachment.id]}
                               alt=""
-                              className="w-full h-full object-cover cursor-pointer"
+                              className="w-full h-auto object-cover cursor-pointer"
+                              width={200}
+                              height={200}
                               onClick={() =>
                                 window.open(
                                   attachmentUrls[imageAttachment.id],
