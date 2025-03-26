@@ -14,7 +14,11 @@ function AppContent({ children }: { children: React.ReactNode }) {
   const { user, teams, projects, loading } = useAppContext();
 
   if (loading) {
-    return <div>Loading...</div>; // Or a proper loading component
+    return (
+      <div className="flex items-center justify-center h-screen w-full">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+      </div>
+    );
   }
 
   return (

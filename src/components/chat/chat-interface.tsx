@@ -1,5 +1,11 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import {
@@ -20,6 +26,9 @@ import {
   FileText,
   Star,
   X,
+  File,
+  FileSpreadsheet,
+  FileImage,
 } from "lucide-react";
 import { useWebSocket } from "@/src/contexts/websocket-context";
 import { apiClient } from "@/src/lib/apiClient";
@@ -44,8 +53,16 @@ import {
 import { Badge } from "@/src/components/ui/badge";
 import { debounce } from "lodash";
 
-// Types for our chat messages
 type MessageType = "user" | "bot";
+
+interface Attachment {
+  id: string;
+  filename: string;
+  contentType: string;
+  fileSize: number;
+  url?: string;
+  fetchingUrl?: boolean; // Add this field to track if we're already fetching the URL
+}
 
 interface Message {
   id: string;
@@ -54,6 +71,7 @@ interface Message {
   timestamp: Date;
   status?: "sent" | "delivered" | "read";
   media?: { type: string; url: string }[];
+  attachments?: Attachment[];
 }
 
 // Type for messages from the backend
@@ -63,6 +81,7 @@ interface ServerMessage {
   senderId: string;
   receiverId: string;
   createdAt: string;
+  attachments?: Attachment[];
 }
 
 export default function ChatInterface({
@@ -82,6 +101,10 @@ export default function ChatInterface({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [userOnline, setUserOnline] = useState(user?.status === "online");
   const [chatInfo, setChatInfo] = useState({ visible: false });
+  const [isUploading, setIsUploading] = useState(false);
+  const [attachmentUrls, setAttachmentUrls] = useState<Record<string, string>>(
+    {},
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(
@@ -90,7 +113,7 @@ export default function ChatInterface({
   const { chatSocket } = useWebSocket();
 
   // Group messages by date for better organization
-  const getMessageDate = (date: Date) => {
+  const getMessageDate = useCallback((date: Date) => {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
@@ -106,19 +129,22 @@ export default function ChatInterface({
         day: "numeric",
       });
     }
-  };
+  }, []);
 
-  const groupedMessages = messages.reduce(
-    (groups, message) => {
-      const date = getMessageDate(message.timestamp);
-      if (!groups[date]) {
-        groups[date] = [];
-      }
-      groups[date].push(message);
-      return groups;
-    },
-    {} as Record<string, Message[]>,
-  );
+  // Memoize the groupedMessages to prevent recalculations
+  const groupedMessages = useMemo(() => {
+    return messages.reduce(
+      (groups, message) => {
+        const date = getMessageDate(message.timestamp);
+        if (!groups[date]) {
+          groups[date] = [];
+        }
+        groups[date].push(message);
+        return groups;
+      },
+      {} as Record<string, Message[]>,
+    );
+  }, [messages, getMessageDate]);
 
   // Scroll to bottom whenever messages change
   useEffect(() => {
@@ -126,52 +152,105 @@ export default function ChatInterface({
   }, [messages]);
 
   // Typing indicator handlers
-  const emitStartTyping = debounce(() => {
-    if (chatSocket && receiverId) {
-      chatSocket.emit("startTyping", {
-        userId: userId,
-        receiverId: receiverId,
-      });
-    }
-  }, 300);
+  const emitStartTyping = useCallback(
+    debounce(() => {
+      if (chatSocket && receiverId) {
+        chatSocket.emit("startTyping", {
+          userId: userId,
+          receiverId: receiverId,
+        });
+      }
+    }, 300),
+    [chatSocket, receiverId, userId],
+  );
 
-  const emitStopTyping = debounce(() => {
-    if (chatSocket && receiverId) {
-      chatSocket.emit("stopTyping", {
-        userId: userId,
-        receiverId: receiverId,
-      });
-    }
-  }, 1000);
+  const emitStopTyping = useCallback(
+    debounce(() => {
+      if (chatSocket && receiverId) {
+        chatSocket.emit("stopTyping", {
+          userId: userId,
+          receiverId: receiverId,
+        });
+      }
+    }, 1000),
+    [chatSocket, receiverId, userId],
+  );
 
   // Handle input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setInput(value);
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setInput(value);
 
-    // Handle typing indicator
-    if (value.length > 0) {
-      emitStartTyping();
+      // Handle typing indicator
+      if (value.length > 0) {
+        emitStartTyping();
 
-      // Clear any existing timeout
-      if (typingTimeout) {
-        clearTimeout(typingTimeout);
-      }
+        // Clear any existing timeout
+        if (typingTimeout) {
+          clearTimeout(typingTimeout);
+        }
 
-      // Set a new timeout to stop typing
-      const timeout = setTimeout(() => {
+        // Set a new timeout to stop typing
+        const timeout = setTimeout(() => {
+          emitStopTyping();
+        }, 3000);
+
+        setTypingTimeout(timeout);
+      } else {
         emitStopTyping();
-      }, 3000);
+      }
+    },
+    [emitStartTyping, emitStopTyping, typingTimeout],
+  );
 
-      setTypingTimeout(timeout);
-    } else {
-      emitStopTyping();
-    }
-  };
+  // Memoize the fetchAttachmentUrl function to maintain stable reference
+  const fetchAttachmentUrl = useCallback(
+    async (attachmentId: string) => {
+      // Skip if we already have the URL
+      if (attachmentUrls[attachmentId]) return;
 
-  // Setup WebSocket events and load messages when component mounts or receiverId changes
+      try {
+        // First check if the attachment URL is already in our messages
+        const attachmentWithUrl = messages.flatMap(
+          (msg) =>
+            msg.attachments?.filter(
+              (att) => att.id === attachmentId && "s3Url" in att,
+            ) || [],
+        )[0];
+
+        if (attachmentWithUrl && "s3Url" in attachmentWithUrl) {
+          // If we already have the S3 URL in the message data, use it directly
+          setAttachmentUrls((prev) => ({
+            ...prev,
+            [attachmentId]: attachmentWithUrl.s3Url as string,
+          }));
+          return;
+        }
+
+        // Otherwise fetch it from the API
+        const response = await apiClient(
+          `/api/messages/attachments/${attachmentId}`,
+        );
+        const data = await response.json();
+
+        if (data.url || data.s3Url) {
+          setAttachmentUrls((prev) => ({
+            ...prev,
+            [attachmentId]: data.url || data.s3Url,
+          }));
+        }
+      } catch (error) {
+        console.error(
+          `Failed to fetch URL for attachment ${attachmentId}:`,
+          error,
+        );
+      }
+    },
+    [attachmentUrls, messages],
+  );
+
   useEffect(() => {
-    // Only reset if we have a valid receiverId
     if (receiverId) {
       setMessages([]); // Clear existing messages
       setInput(""); // Clear input field
@@ -181,13 +260,10 @@ export default function ChatInterface({
 
     if (!chatSocket || !receiverId) return;
 
-    // Create room name using the same format as the backend
     const roomName = [userId, receiverId].sort().join("-");
 
-    // Join new room
     chatSocket.emit("joinRoom", { userId, receiverId, roomName });
 
-    // Handle successful room join
     interface JoinRoomSuccessData {
       roomName: string;
     }
@@ -196,25 +272,26 @@ export default function ChatInterface({
       console.log(`Successfully joined room: ${data.roomName}`);
     };
 
-    // Handle incoming messages
     const handleNewMessage = (message: ServerMessage) => {
-      // Convert server message to our message format
       const newMessage: Message = {
         id: message.id,
         content: message.text,
         type: message.senderId === userId ? "user" : "bot",
         timestamp: new Date(message.createdAt),
         status: "delivered",
+        attachments: message.attachments
+          ? message.attachments.map((att) => ({
+              ...att,
+              fetchingUrl: false, // Initialize the tracking field
+            }))
+          : undefined,
       };
 
-      // If it's a response from the other user, turn off typing indicator
       if (message.senderId !== userId) {
         setIsTyping(false);
       }
 
-      // Add new message to the list
       setMessages((prevMessages) => {
-        // Check if we already have this message to prevent duplicates
         if (prevMessages.some((msg) => msg.id === message.id)) {
           return prevMessages;
         }
@@ -223,11 +300,9 @@ export default function ChatInterface({
       });
     };
 
-    // Handle typing indicators
     const handleUserTyping = () => setIsTyping(true);
     const handleUserStoppedTyping = () => setIsTyping(false);
 
-    // Listen for events
     chatSocket.on("joinRoomSuccess", handleJoinRoomSuccess);
     chatSocket.on("newMessage", handleNewMessage);
     chatSocket.on("userTyping", handleUserTyping);
@@ -235,20 +310,37 @@ export default function ChatInterface({
     chatSocket.on("userOnline", () => setUserOnline(true));
     chatSocket.on("userOffline", () => setUserOnline(false));
 
-    // Load previous messages for this conversation
     const loadMessages = async () => {
       try {
         const response = await apiClient(
           `/api/messages/${userId}/${receiverId}`,
         );
         const data = await response.json();
-        const formattedMessages = data.map((msg: ServerMessage) => ({
+
+        // Format messages based on actual API response structure
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const formattedMessages = data.map((msg: any) => ({
           id: msg.id,
-          content: msg.text,
+          content: msg.text, // API returns 'text', map to 'content' for our component
           type: msg.senderId === userId ? "user" : "bot",
           timestamp: new Date(msg.createdAt),
           status: "read",
+          attachments: msg.attachments
+            ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              msg.attachments.map((att: any) => ({
+                id: att.id,
+                filename: att.filename,
+                contentType: att.contentType || att.fileType, // Handle both contentType and fileType
+                fileSize: att.fileSize,
+                fetchingUrl: false, // Initialize the tracking field
+              }))
+            : undefined,
+          // Store additional sender/receiver info if needed
+          senderInfo: msg.sender,
+          receiverInfo: msg.receiver,
         }));
+
         setMessages(formattedMessages);
       } catch (error) {
         console.error("Failed to load messages:", error);
@@ -272,9 +364,42 @@ export default function ChatInterface({
       chatSocket.off("userOnline");
       chatSocket.off("userOffline");
     };
-  }, [userId, receiverId, chatSocket]);
+  }, [
+    userId,
+    receiverId,
+    chatSocket,
+    emitStartTyping,
+    emitStopTyping,
+    typingTimeout,
+  ]);
 
-  const handleSendMessage = () => {
+  // Replace the attachments useEffect with a more reliable implementation
+  useEffect(() => {
+    // Skip if no messages
+    if (messages.length === 0) return;
+
+    // Get a list of all attachments needing URLs
+    const attachmentsNeedingUrls: string[] = [];
+
+    messages.forEach((msg) => {
+      if (!msg.attachments) return;
+
+      msg.attachments.forEach((att) => {
+        // Don't refetch URLs we already have or are currently fetching
+        if (!attachmentUrls[att.id] && !att.fetchingUrl) {
+          att.fetchingUrl = true; // Mark as fetching without triggering re-render
+          attachmentsNeedingUrls.push(att.id);
+        }
+      });
+    });
+
+    // Fetch all needed attachment URLs
+    attachmentsNeedingUrls.forEach((id) => {
+      fetchAttachmentUrl(id);
+    });
+  }, [messages, fetchAttachmentUrl, attachmentUrls]);
+
+  const handleSendMessage = useCallback(() => {
     if (input.trim() === "" || !chatSocket || !receiverId) return;
 
     // Create message payload for the backend
@@ -299,49 +424,340 @@ export default function ChatInterface({
       setShowEmojiPicker(false);
     }
 
-    // Send message via chatSocket - the server will echo back the saved message
-    // which will be added to our messages list in the newMessage handler
+    // Send message via chatSocket
     chatSocket.emit("sendMessage", messagePayload);
-  };
+  }, [
+    input,
+    chatSocket,
+    receiverId,
+    userId,
+    emitStopTyping,
+    typingTimeout,
+    showEmojiPicker,
+  ]);
 
-  // Handle file input change
-  const handleFileInput = () => {
-    // Implement file upload logic here
-    console.log("File upload clicked");
+  // Handle file uploads
+  const handleFileInput = useCallback(() => {
+    // Create file input element
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*,.pdf,.doc,.docx";
     input.multiple = true;
-    input.onchange = (e) => {
+
+    // When files are selected
+    input.onchange = async (e) => {
       const files = (e.target as HTMLInputElement).files;
-      if (files && files.length > 0) {
-        // Here you would typically upload the files to your server
-        console.log("Files selected:", files);
+      if (!files || files.length === 0 || !receiverId) return;
+
+      try {
+        // Show upload indicator
+        setIsUploading(true);
+
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+
+          // Create form data
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("senderId", userId);
+          formData.append("receiverId", receiverId);
+
+          // Send to our Next.js API proxy
+          const response = await apiClient("/api/messages/upload", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error("Upload failed");
+          }
+        }
+      } catch (error) {
+        console.error("Error uploading file:", error);
+      } finally {
+        setIsUploading(false);
       }
     };
+
+    // Open file selection dialog
     input.click();
-  };
+  }, [receiverId, userId]);
+
+  // Helper functions for file icons and sizes
+  const getFileIcon = useCallback((contentType: string = "") => {
+    if (contentType.includes("pdf")) {
+      return <FileText className="h-6 w-6 text-red-500" />;
+    }
+    if (contentType.includes("word") || contentType.includes("doc")) {
+      return <FileText className="h-6 w-6 text-blue-500" />;
+    }
+    if (contentType.includes("sheet") || contentType.includes("excel")) {
+      return <FileSpreadsheet className="h-6 w-6 text-green-500" />;
+    }
+    if (contentType.includes("image")) {
+      return <FileImage className="h-6 w-6 text-purple-500" />;
+    }
+    return <File className="h-6 w-6 text-gray-500" />;
+  }, []);
+
+  const formatFileSize = useCallback((bytes: number) => {
+    if (!bytes) return "0 Bytes";
+    if (bytes < 1024) return bytes + " Bytes";
+    if (bytes < 1048576) return Math.round(bytes / 1024) + " KB";
+    return (bytes / 1048576).toFixed(1) + " MB";
+  }, []);
+
+  // Use useCallback to memoize the renderAttachment function
+  const renderAttachment = useCallback(
+    (attachment: Attachment) => {
+      const url = attachmentUrls[attachment.id];
+
+      if (!url) {
+        return (
+          <div className="flex items-center p-2 rounded-md bg-muted/50 animate-pulse">
+            <div className="h-10 w-10 rounded-md bg-muted"></div>
+            <div className="ml-2 flex-1">
+              <div className="h-4 w-24 bg-muted rounded mb-1"></div>
+              <div className="h-3 w-16 bg-muted rounded"></div>
+            </div>
+          </div>
+        );
+      }
+
+      const isImage = attachment.contentType?.includes("image");
+
+      if (isImage) {
+        return (
+          <div className="max-w-[200px] rounded-md overflow-hidden">
+            <img
+              src={url}
+              alt={attachment.filename}
+              className="w-full h-auto object-cover cursor-pointer"
+              onClick={() => window.open(url, "_blank")}
+            />
+            <div className="text-xs px-2 py-1 bg-background/80 truncate">
+              {attachment.filename}
+            </div>
+          </div>
+        );
+      } else {
+        return (
+          <div
+            className="flex items-center p-2 rounded-md bg-muted/30 hover:bg-muted cursor-pointer"
+            onClick={() => window.open(url, "_blank")}
+          >
+            {getFileIcon(attachment.contentType)}
+            <div className="ml-2 flex-1 min-w-0">
+              <p className="text-xs font-medium truncate">
+                {attachment.filename}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {formatFileSize(attachment.fileSize)}
+              </p>
+            </div>
+          </div>
+        );
+      }
+    },
+    [attachmentUrls, getFileIcon, formatFileSize],
+  );
 
   // Handle emoji selection
-  const handleEmojiSelect = (emoji: string) => {
-    setInput((prev) => prev + emoji);
-    inputRef.current?.focus();
+  const handleEmojiSelect = useCallback(
+    (emoji: string) => {
+      setInput((prev) => prev + emoji);
+      inputRef.current?.focus();
 
-    // Trigger typing indicator when adding emoji
-    emitStartTyping();
+      // Trigger typing indicator when adding emoji
+      emitStartTyping();
 
-    // Clear any existing timeout
-    if (typingTimeout) {
-      clearTimeout(typingTimeout);
-    }
+      // Clear any existing timeout
+      if (typingTimeout) {
+        clearTimeout(typingTimeout);
+      }
 
-    // Set a new timeout to stop typing
-    const timeout = setTimeout(() => {
-      emitStopTyping();
-    }, 3000);
+      // Set a new timeout to stop typing
+      const timeout = setTimeout(() => {
+        emitStopTyping();
+      }, 3000);
 
-    setTypingTimeout(timeout);
-  };
+      setTypingTimeout(timeout);
+    },
+    [emitStartTyping, emitStopTyping, typingTimeout],
+  );
+
+  const toggleChatInfo = useCallback(() => {
+    setChatInfo((prev) => ({ ...prev, visible: !prev.visible }));
+  }, []);
+
+  // Create memoized version of the chat info panel
+  const renderChatInfoPanel = useMemo(() => {
+    if (!chatInfo.visible || !user) return null;
+
+    return (
+      <motion.div
+        initial={{ width: 0, opacity: 0 }}
+        animate={{ width: 300, opacity: 1 }}
+        exit={{ width: 0, opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="border-l border-border h-full bg-card overflow-hidden"
+      >
+        <div className="flex flex-col h-full">
+          <div className="p-4 border-b border-border flex items-center justify-between">
+            <h3 className="font-medium">Chat Information</h3>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full"
+              onClick={toggleChatInfo}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <ScrollArea className="flex-1 p-4">
+            <div className="flex flex-col items-center mb-5 text-center">
+              <Avatar className="h-20 w-20 mb-3 border-2 border-primary/10">
+                {user?.avatar ? (
+                  <AvatarImage src={user.avatar} alt={user?.name} />
+                ) : (
+                  <AvatarFallback className="bg-primary/10 text-primary text-2xl">
+                    {user?.name?.charAt(0).toUpperCase() || "U"}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              <h3 className="text-lg font-medium mb-1">{user?.name}</h3>
+              <p className="text-sm text-muted-foreground">{user?.email}</p>
+              <div className="flex mt-4 space-x-2">
+                <Button size="sm" variant="outline" className="rounded-full">
+                  <Star className="h-4 w-4 mr-1" />
+                  Favorite
+                </Button>
+                <Button size="sm" className="rounded-full bg-primary">
+                  <FileText className="h-4 w-4 mr-1" />
+                  View Profile
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-4 mt-3">
+              <div>
+                <h4 className="text-sm font-medium mb-2">Shared Media</h4>
+                <div className="grid grid-cols-3 gap-2">
+                  {messages
+                    .filter((msg) =>
+                      msg.attachments?.some((att) =>
+                        att.contentType?.includes("image"),
+                      ),
+                    )
+                    .slice(0, 6)
+                    .map((msg) => {
+                      const imageAttachment = msg.attachments?.find((att) =>
+                        att.contentType?.includes("image"),
+                      );
+                      if (!imageAttachment) return null;
+
+                      return (
+                        <div
+                          key={imageAttachment.id}
+                          className="aspect-square bg-muted rounded-md overflow-hidden relative"
+                        >
+                          {attachmentUrls[imageAttachment.id] ? (
+                            <img
+                              src={attachmentUrls[imageAttachment.id]}
+                              alt=""
+                              className="w-full h-full object-cover cursor-pointer"
+                              onClick={() =>
+                                window.open(
+                                  attachmentUrls[imageAttachment.id],
+                                  "_blank",
+                                )
+                              }
+                            />
+                          ) : (
+                            <div className="w-full h-full animate-pulse" />
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium mb-2">Shared Files</h4>
+                <div className="space-y-2">
+                  {messages
+                    .filter((msg) =>
+                      msg.attachments?.some(
+                        (att) => !att.contentType?.includes("image"),
+                      ),
+                    )
+                    .slice(0, 3)
+                    .map((msg) => {
+                      const fileAttachment = msg.attachments?.find(
+                        (att) => !att.contentType?.includes("image"),
+                      );
+                      if (!fileAttachment) return null;
+
+                      return (
+                        <div
+                          key={fileAttachment.id}
+                          className="flex items-center p-2 rounded-md bg-muted/50 hover:bg-muted cursor-pointer"
+                          onClick={() => {
+                            if (attachmentUrls[fileAttachment.id]) {
+                              window.open(
+                                attachmentUrls[fileAttachment.id],
+                                "_blank",
+                              );
+                            }
+                          }}
+                        >
+                          {getFileIcon(fileAttachment.contentType)}
+                          <div className="flex-1 min-w-0 ml-2">
+                            <p className="text-xs font-medium truncate">
+                              {fileAttachment.filename}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatFileSize(fileAttachment.fileSize)}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            </div>
+          </ScrollArea>
+
+          <div className="p-4 border-t border-border">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full">
+                  <MoreVertical className="h-4 w-4 mr-2" />
+                  More options
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Clear chat history</DropdownMenuItem>
+                <DropdownMenuItem>Block user</DropdownMenuItem>
+                <DropdownMenuItem>Report a problem</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }, [
+    chatInfo.visible,
+    user,
+    messages,
+    attachmentUrls,
+    toggleChatInfo,
+    getFileIcon,
+    formatFileSize,
+  ]);
 
   // Empty state when no receiver is selected
   if (!receiverId) {
@@ -369,10 +785,6 @@ export default function ChatInterface({
       </div>
     );
   }
-
-  const toggleChatInfo = () => {
-    setChatInfo((prev) => ({ ...prev, visible: !prev.visible }));
-  };
 
   return (
     <div className="flex h-full bg-background border-l border-border">
@@ -607,9 +1019,29 @@ export default function ChatInterface({
                                 : "bg-muted border border-border/50",
                             )}
                           >
-                            <div className="text-sm whitespace-pre-wrap break-words">
-                              {message.content}
-                            </div>
+                            {/* Message text content */}
+                            {message.content && (
+                              <div className="text-sm whitespace-pre-wrap break-words">
+                                {message.content}
+                              </div>
+                            )}
+
+                            {/* Attachments */}
+                            {message.attachments &&
+                              message.attachments.length > 0 && (
+                                <div
+                                  className={cn(
+                                    "mt-2 space-y-2",
+                                    !message.content && "mt-0",
+                                  )}
+                                >
+                                  {message.attachments.map((attachment) => (
+                                    <div key={attachment.id}>
+                                      {renderAttachment(attachment)}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
 
                             {/* Only show timestamp for last message in group */}
                             {isLastInGroup && (
@@ -736,6 +1168,42 @@ export default function ChatInterface({
             )}
           </AnimatePresence>
 
+          {/* File upload progress indicator */}
+          <AnimatePresence>
+            {isUploading && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="flex justify-end mt-2"
+              >
+                <div className="bg-primary/20 text-primary rounded-full px-4 py-1.5 text-xs">
+                  <div className="flex items-center">
+                    <div className="animate-spin mr-2">
+                      <svg className="h-3 w-3" viewBox="0 0 24 24">
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="none"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    </div>
+                    Uploading file...
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <div ref={messagesEndRef} />
         </ScrollArea>
 
@@ -754,6 +1222,7 @@ export default function ChatInterface({
                   handleSendMessage();
                 }
               }}
+              disabled={isUploading}
             />
 
             <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
@@ -766,6 +1235,7 @@ export default function ChatInterface({
                       variant="ghost"
                       onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                       className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+                      disabled={isUploading}
                     >
                       <Smile className="h-5 w-5" />
                     </Button>
@@ -783,6 +1253,7 @@ export default function ChatInterface({
                       variant="ghost"
                       onClick={handleFileInput}
                       className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+                      disabled={isUploading}
                     >
                       <Paperclip className="h-5 w-5" />
                     </Button>
@@ -795,7 +1266,7 @@ export default function ChatInterface({
                 type="button"
                 size="icon"
                 onClick={handleSendMessage}
-                disabled={input.trim() === ""}
+                disabled={input.trim() === "" || isUploading}
                 className="bg-primary hover:bg-primary/90 rounded-full h-8 w-8 ml-1"
               >
                 <Send className="h-4 w-4" />
@@ -857,105 +1328,7 @@ export default function ChatInterface({
 
       {/* Chat info panel */}
       <AnimatePresence>
-        {chatInfo.visible && (
-          <motion.div
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 300, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="border-l border-border h-full bg-card overflow-hidden"
-          >
-            <div className="flex flex-col h-full">
-              <div className="p-4 border-b border-border flex items-center justify-between">
-                <h3 className="font-medium">Chat Information</h3>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full"
-                  onClick={toggleChatInfo}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <ScrollArea className="flex-1 p-4">
-                <div className="flex flex-col items-center mb-5 text-center">
-                  <Avatar className="h-20 w-20 mb-3 border-2 border-primary/10">
-                    {user?.avatar ? (
-                      <AvatarImage src={user.avatar} alt={user?.name} />
-                    ) : (
-                      <AvatarFallback className="bg-primary/10 text-primary text-2xl">
-                        {user?.name?.charAt(0).toUpperCase() || "U"}
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
-                  <h3 className="text-lg font-medium mb-1">{user?.name}</h3>
-                  <p className="text-sm text-muted-foreground">{user?.email}</p>
-                  <div className="flex mt-4 space-x-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="rounded-full"
-                    >
-                      <Star className="h-4 w-4 mr-1" />
-                      Favorite
-                    </Button>
-                    <Button size="sm" className="rounded-full bg-primary">
-                      <FileText className="h-4 w-4 mr-1" />
-                      View Profile
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-4 mt-3">
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">Shared Media</h4>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="aspect-square bg-muted rounded-md"></div>
-                      <div className="aspect-square bg-muted rounded-md"></div>
-                      <div className="aspect-square bg-muted rounded-md"></div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">Shared Files</h4>
-                    <div className="space-y-2">
-                      <div className="flex items-center p-2 rounded-md bg-muted/50 hover:bg-muted">
-                        <FileText className="h-4 w-4 mr-2 text-primary" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium truncate">
-                            Project_Report.pdf
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            1.2 MB
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </ScrollArea>
-
-              <div className="p-4 border-t border-border">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-full">
-                      <MoreVertical className="h-4 w-4 mr-2" />
-                      More options
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem>Clear chat history</DropdownMenuItem>
-                    <DropdownMenuItem>Block user</DropdownMenuItem>
-                    <DropdownMenuItem>Report a problem</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-          </motion.div>
-        )}
+        {chatInfo.visible && renderChatInfoPanel}
       </AnimatePresence>
     </div>
   );

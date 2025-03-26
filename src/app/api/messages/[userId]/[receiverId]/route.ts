@@ -5,6 +5,7 @@ export async function GET(
   { params }: { params: Promise<{ userId: string; receiverId: string }> },
 ) {
   try {
+    const accessToken = request.cookies.get("access_token")?.value;
     const { userId, receiverId } = await params;
 
     // Make sure both IDs are provided
@@ -22,6 +23,7 @@ export async function GET(
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: "Bearer " + accessToken,
         },
         cache: "no-store",
       },
