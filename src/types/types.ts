@@ -173,3 +173,63 @@ export type TeamMember = {
   lastActive: Date;
   unreadCount: number;
 };
+
+import {
+  NOTIFICATION_TYPES,
+  NOTIFICATION_PRIORITIES,
+  NOTIFICATION_SOURCES,
+} from "../lib/notification-utils";
+
+export type NotificationType =
+  (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
+export type NotificationPriority =
+  (typeof NOTIFICATION_PRIORITIES)[keyof typeof NOTIFICATION_PRIORITIES];
+export type NotificationSource =
+  (typeof NOTIFICATION_SOURCES)[keyof typeof NOTIFICATION_SOURCES];
+
+export interface Notification {
+  id: string;
+  userId: string;
+  message: string;
+  type: string; // Will be converted to proper type
+  read: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  category?: string;
+  source?: string;
+  priority?: string;
+  title?: string;
+  imageUrl?: string;
+  actionUrl?: string;
+  relatedEntityId?: string;
+}
+
+export interface ProcessedNotification
+  extends Omit<Notification, "type" | "priority" | "source"> {
+  type: NotificationType;
+  priority: NotificationPriority;
+  source: NotificationSource;
+  parsedCreatedAt: Date;
+  timeAgo: string;
+}
+
+export interface ExtendedTask extends Task {
+  assignedUsers?: string[];
+  description: string;
+  isEditing?: boolean;
+  isNew?: boolean;
+}
+
+export interface TaskAssignment {
+  id: string;
+  user: User;
+  taskId: string;
+  userId: string;
+}
+
+export const TASK_STATUS_OPTIONS = [
+  { value: "TODO", label: "To Do" },
+  { value: "IN_PROGRESS", label: "In Progress" },
+  { value: "REVIEW", label: "Review" },
+  { value: "DONE", label: "Done" },
+];
