@@ -2,21 +2,7 @@
 import React from "react";
 import Image from "next/image";
 import { FileText, FileSpreadsheet, FileImage, File } from "lucide-react";
-
-interface Attachment {
-  id: string;
-  filename: string;
-  contentType: string;
-  fileSize: number;
-  url?: string;
-  fetchingUrl?: boolean;
-}
-
-interface MessageAttachmentProps {
-  attachment: Attachment;
-  url?: string;
-  formatFileSize: (size: number) => string;
-}
+import { MessageAttachmentProps } from "@/src/types";
 
 export function MessageAttachment({
   attachment,

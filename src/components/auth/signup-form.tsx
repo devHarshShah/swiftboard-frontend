@@ -18,6 +18,7 @@ import {
 import { FaGoogle, FaGithub, FaApple } from "react-icons/fa";
 import { Toast } from "../ui/toast";
 import Navbar from "../navbar";
+import { Errors } from "@/src/types";
 
 export default function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -37,15 +38,6 @@ export default function SignupForm() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [step, setStep] = useState(1);
-
-  interface Errors {
-    name?: string;
-    email?: string;
-    password?: string;
-    confirmPassword?: string;
-    terms?: string;
-    [key: string]: string | undefined;
-  }
 
   const togglePasswordVisibility = (field: "password" | "confirm"): void => {
     if (field === "password") {

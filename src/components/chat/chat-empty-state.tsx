@@ -3,12 +3,7 @@ import React from "react";
 import { Button } from "@/src/components/ui/button";
 import { MessageSquare, UserIcon } from "lucide-react";
 import { motion } from "framer-motion";
-
-interface ChatEmptyStateProps {
-  type: "welcome" | "start-conversation";
-  userName?: string;
-  onSayHello?: () => void;
-}
+import { ChatEmptyStateProps } from "@/src/types";
 
 export function ChatEmptyState({
   type,

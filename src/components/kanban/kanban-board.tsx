@@ -2,7 +2,7 @@
 import React, { useMemo } from "react";
 import { TaskColumn } from "./task-coulmn";
 import { TaskForm } from "./task-form";
-import { TaskStatus, GroupedTasks, statusConfig } from "@/src/types/types";
+import { TaskStatus, GroupedTasks, statusConfig } from "@/src/types";
 import { useTaskManager } from "@/src/contexts/task-context";
 
 const KanbanBoard: React.FC = () => {

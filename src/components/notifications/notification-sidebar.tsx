@@ -18,18 +18,7 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { getTypeDetails } from "@/src/lib/notification-utils";
 import { NotificationType } from "@/src/lib/notification-utils";
-
-interface NotificationSidebarProps {
-  categories: string[];
-  activeCategory: string;
-  setActiveCategory: (category: string) => void;
-  getUnreadCount: (category: string) => number;
-  filter: string;
-  setFilter: (filter: string) => void;
-  timeFilter: string;
-  setTimeFilter: (filter: string) => void;
-  clearAllNotifications: (category?: string) => void;
-}
+import { NotificationSidebarProps } from "@/src/types";
 
 export function NotificationSidebar({
   categories,

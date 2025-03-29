@@ -14,13 +14,7 @@ import {
   getPriorityBadge,
   formatDate,
 } from "@/src/lib/notification-utils";
-import { ProcessedNotification } from "@/src/types/types";
-
-interface NotificationItemProps {
-  notification: ProcessedNotification;
-  markAsRead: (id: string) => void;
-  deleteNotification: (id: string) => void;
-}
+import { NotificationItemProps } from "@/src/types";
 
 export function NotificationItem({
   notification,

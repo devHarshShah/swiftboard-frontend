@@ -8,30 +8,9 @@ import React, {
 } from "react";
 import { apiClient } from "@/src/lib/apiClient";
 import { useAppContext } from "@/src/contexts/app-context";
-import { TaskStatusKey, Task, User } from "@/src/types/types";
-import { ExtendedTask } from "@/src/types/types";
-
-interface TaskManagerContextType {
-  tasks: ExtendedTask[];
-  editingTask: ExtendedTask | null;
-  isLoading: boolean;
-  userSearchQuery: string;
-  blockingTaskSearchQuery: string;
-  users: User[];
-  setUserSearchQuery: (query: string) => void;
-  setBlockingTaskSearchQuery: (query: string) => void;
-  toggleUserSelection: (userId: string) => void;
-  toggleTaskSelection: (task: Task) => void;
-  startEditing: (task: ExtendedTask) => void;
-  cancelEditing: () => void;
-  handleSaveEditing: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  updateEditingTask: (field: string, value: any) => void;
-  toggleTaskCompletion: (task: Task) => void;
-  moveTask: (task: Task, newStatus: TaskStatusKey) => void;
-  deleteTask: (taskId: string) => void;
-  addNewTask: () => void;
-}
+import { TaskStatusKey, Task, User } from "@/src/types";
+import { ExtendedTask } from "@/src/types";
+import { TaskManagerContextType } from "@/src/types";
 
 const TaskManagerContext = createContext<TaskManagerContextType | undefined>(
   undefined,

@@ -1,5 +1,5 @@
 "use client";
-import { ExtendedTask } from "@/src/types/types";
+import { ExtendedTask } from "@/src/types";
 import { Badge } from "@/src/components/ui/badge";
 import { AlertCircle } from "lucide-react";
 import { TaskBlockingSection } from "./task-blocking";

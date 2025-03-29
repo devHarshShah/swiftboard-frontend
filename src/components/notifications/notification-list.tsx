@@ -18,23 +18,7 @@ import {
 import { NotificationItem } from "./notification-item";
 import { EmptyNotifications } from "./empty-notification";
 import { NotificationSkeleton } from "./notification-skeleton";
-import { ProcessedNotification } from "@/src/types/types";
-
-interface NotificationListProps {
-  notifications: ProcessedNotification[];
-  activeCategory: string;
-  filter: string;
-  setFilter: (filter: string) => void;
-  groupedNotifications: Record<string, ProcessedNotification[]>;
-  loading: boolean;
-  getUnreadCount: (category: string) => number;
-  filterNotifications: (
-    notifications: ProcessedNotification[],
-  ) => ProcessedNotification[];
-  markAllAsRead: (category?: string) => void;
-  markAsRead: (id: string) => void;
-  deleteNotification: (id: string) => void;
-}
+import { NotificationListProps } from "@/src/types";
 
 export function NotificationList({
   notifications,

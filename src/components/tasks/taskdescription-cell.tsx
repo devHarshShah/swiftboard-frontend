@@ -1,6 +1,6 @@
 "use client";
 import { Textarea } from "@/src/components/ui/textarea";
-import { ExtendedTask } from "@/src/types/types";
+import { ExtendedTask } from "@/src/types";
 import { useTaskManager } from "@/src/contexts/task-context";
 
 export function TaskDescriptionCell({ task }: { task: ExtendedTask }) {

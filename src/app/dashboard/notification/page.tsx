@@ -16,7 +16,7 @@ import {
   normalizePriority,
   normalizeSource,
 } from "@/src/lib/notification-utils";
-import type { Notification, ProcessedNotification } from "@/src/types/types";
+import { Notification, ProcessedNotification } from "@/src/types";
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<ProcessedNotification[]>(
@@ -65,7 +65,7 @@ export default function NotificationsPage() {
         return `${yearsAgo} ${yearsAgo === 1 ? "year" : "years"} ago`;
       };
 
-      const parsedCreatedAt = new Date(notification.createdAt);
+      const parsedCreatedAt = new Date(notification.createdAt || new Date());
       return {
         ...notification,
         type: normalizeType(notification.type),

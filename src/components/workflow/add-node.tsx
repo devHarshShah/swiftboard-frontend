@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { PlusIcon, ChevronDownIcon } from "lucide-react";
 import NodeTemplateList from "./node-template";
-import { nodeTemplates } from "@/src/types/types";
+import { nodeTemplates } from "@/src/types";
 
 interface AddNodeButtonProps {
   onAddNode: (template: (typeof nodeTemplates)[0]) => void;

@@ -21,22 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/src/components/ui/dropdown-menu";
 import { cn } from "@/src/lib/utils";
-import {
-  Task,
-  TaskStatus,
-  TaskStatusKey,
-  statusConfig,
-  User,
-} from "@/src/types/types";
-
-interface TaskCardProps {
-  task: Task;
-  config: typeof statusConfig;
-  onMove: (newStatus: TaskStatusKey) => void;
-  onDelete: () => void;
-  onEdit: () => void;
-  isDisabled?: boolean;
-}
+import { TaskStatus, TaskStatusKey, User, TaskCardProps } from "@/src/types";
 
 export const TaskCard: React.FC<TaskCardProps> = ({
   task,

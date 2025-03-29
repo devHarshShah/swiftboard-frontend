@@ -1,7 +1,7 @@
 "use client";
 import { format } from "date-fns";
 import { useTaskManager } from "@/src/contexts/task-context";
-import { ExtendedTask } from "@/src/types/types";
+import { ExtendedTask } from "@/src/types";
 import { Calendar } from "@/src/components/ui/calendar";
 import {
   Popover,

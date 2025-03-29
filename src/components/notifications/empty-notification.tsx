@@ -1,9 +1,5 @@
 import { Bell } from "lucide-react";
-
-interface EmptyNotificationsProps {
-  filter: string;
-  activeCategory: string;
-}
+import { EmptyNotificationsProps } from "@/src/types";
 
 export function EmptyNotifications({
   filter,

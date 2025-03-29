@@ -29,7 +29,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/src/components/ui/sidebar";
-import { User } from "@/src/types/types";
+import { User } from "@/src/types";
 
 function getInitials(name: string) {
   const words = name.split(" ");

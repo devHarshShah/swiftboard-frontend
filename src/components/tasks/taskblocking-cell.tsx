@@ -1,5 +1,5 @@
 "use client";
-import { ExtendedTask } from "@/src/types/types";
+import { ExtendedTask } from "@/src/types";
 import { Badge } from "@/src/components/ui/badge";
 
 export function TaskBlockingCell({ task }: { task: ExtendedTask }) {

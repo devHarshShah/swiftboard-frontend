@@ -38,10 +38,18 @@ export function ProjectSwitcher() {
     id: string;
     name: string;
     teamId: string;
-    createdAt: string;
-    updatedAt: string;
+    createdAt?: string | Date | undefined;
+    updatedAt?: string | Date | undefined;
   }) => {
-    setActiveProject(project);
+    // Convert Date objects to strings and ensure values are defined
+    const formattedProject = {
+      id: project.id,
+      name: project.name,
+      teamId: project.teamId,
+      createdAt: project.createdAt ? project.createdAt.toString() : "",
+      updatedAt: project.updatedAt ? project.updatedAt.toString() : "",
+    };
+    setActiveProject(formattedProject);
     router.refresh();
   };
 

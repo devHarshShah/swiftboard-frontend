@@ -13,16 +13,7 @@ import { ScrollArea } from "@/src/components/ui/scroll-area";
 import { Avatar } from "@/src/components/ui/avatar";
 import { Badge } from "@/src/components/ui/badge";
 import { apiClient } from "@/src/lib/apiClient";
-
-interface Notification {
-  id: string;
-  userId: string;
-  message: string;
-  type: string;
-  read: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { Notification } from "@/src/types";
 
 export function NotificationPanel() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -156,7 +147,9 @@ export function NotificationPanel() {
                       {notification.message}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(notification.createdAt).toLocaleTimeString()}
+                      {notification.createdAt
+                        ? new Date(notification.createdAt).toLocaleTimeString()
+                        : ""}
                     </p>
                   </div>
                 </div>

@@ -6,7 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/src/components/ui/select";
-import { ExtendedTask, TASK_STATUS_OPTIONS } from "@/src/types/types";
+import { ExtendedTask, TASK_STATUS_OPTIONS } from "@/src/types";
 import { useTaskManager } from "@/src/contexts/task-context";
 import { Badge } from "@/src/components/ui/badge";
 

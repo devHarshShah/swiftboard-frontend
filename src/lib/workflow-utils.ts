@@ -1,5 +1,5 @@
 import { Node, Edge } from "reactflow";
-import { WorkflowNodeData } from "../types/types";
+import { WorkflowNodeData } from "@/src/types";
 
 export function transformWorkflowData(
   nodes: Node<WorkflowNodeData>[],

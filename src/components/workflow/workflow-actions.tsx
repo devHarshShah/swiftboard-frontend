@@ -1,9 +1,4 @@
-interface WorkflowActionsProps {
-  workflowFetched: boolean;
-  handleDraft: () => void;
-  updateDraft: () => void;
-  publishWorkflow: () => void;
-}
+import { WorkflowActionsProps } from "@/src/types";
 
 export default function WorkflowActions({
   workflowFetched,

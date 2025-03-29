@@ -1,7 +1,7 @@
 "use client";
 import { Checkbox } from "@/src/components/ui/checkbox";
 import { Input } from "@/src/components/ui/input";
-import { ExtendedTask } from "@/src/types/types";
+import { ExtendedTask } from "@/src/types";
 import { useTaskManager } from "@/src/contexts/task-context";
 
 export function TaskNameCell({ task }: { task: ExtendedTask }) {

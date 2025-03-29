@@ -6,11 +6,7 @@ import {
   AvatarImage,
 } from "@/src/components/ui/avatar";
 import { motion } from "framer-motion";
-import { TeamMember } from "@/src/types/types";
-
-interface TypingIndicatorProps {
-  user: TeamMember | null;
-}
+import { TypingIndicatorProps } from "@/src/types";
 
 export function TypingIndicator({ user }: TypingIndicatorProps) {
   return (

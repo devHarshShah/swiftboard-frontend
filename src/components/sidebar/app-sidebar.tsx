@@ -24,7 +24,7 @@ import {
   SidebarHeader,
 } from "@/src/components/ui/sidebar";
 
-import { User, Team, Project } from "@/src/types/types";
+import { User, Team, Project } from "@/src/types";
 
 const data = {
   navMain: [

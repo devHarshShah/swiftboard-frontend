@@ -9,7 +9,7 @@ import React, {
 import { ScrollArea } from "@/src/components/ui/scroll-area";
 import { useWebSocket } from "@/src/contexts/websocket-context";
 import { apiClient } from "@/src/lib/apiClient";
-import { TeamMember, User } from "@/src/types/types";
+import { TeamMember, User } from "@/src/types";
 import { AnimatePresence } from "framer-motion";
 import { debounce } from "lodash";
 
@@ -21,39 +21,7 @@ import { ChatEmptyState } from "./chat-empty-state";
 import { TypingIndicator } from "./typing-indicator";
 import { UploadIndicator } from "./upload-indicator";
 import { ChatInfoPanel } from "./chat-info-panel";
-
-// Types
-type MessageType = "user" | "bot";
-type MessageStatus = "sent" | "delivered" | "read";
-
-interface Attachment {
-  id: string;
-  filename: string;
-  contentType: string;
-  fileSize: number;
-  url?: string;
-  fetchingUrl?: boolean;
-}
-
-interface Message {
-  id: string;
-  content: string;
-  type: MessageType;
-  timestamp: Date;
-  status?: MessageStatus;
-  media?: { type: string; url: string }[];
-  attachments?: Attachment[];
-}
-
-// Type for messages from the backend
-interface ServerMessage {
-  id: string;
-  text: string;
-  senderId: string;
-  receiverId: string;
-  createdAt: string;
-  attachments?: Attachment[];
-}
+import { ServerMessage, Message } from "@/src/types";
 
 export default function ChatInterface({
   userId,

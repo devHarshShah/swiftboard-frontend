@@ -3,21 +3,8 @@ import { Button } from "@/src/components/ui/button";
 import { Plus } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import { TaskCard } from "./task-card";
-import { Task, TaskStatusKey, statusConfig } from "@/src/types/types";
 import { useTaskManager } from "@/src/contexts/task-context";
-
-interface TaskColumnProps {
-  status: TaskStatusKey;
-  tasks: Task[];
-  config: typeof statusConfig;
-  onMoveTask: (task: Task, status: TaskStatusKey) => void;
-  onDeleteTask: (taskId: string) => void;
-  onEditTask: (task: Task) => void;
-  onAddTask: () => void;
-  isAddingAllowed: boolean;
-  isAddingActive: boolean;
-  children?: React.ReactNode;
-}
+import { TaskColumnProps } from "@/src/types";
 
 export const TaskColumn: React.FC<TaskColumnProps> = ({
   status,

@@ -2,17 +2,7 @@ import { Panel } from "reactflow";
 import AddNodeButton from "./add-node";
 import WorkflowActions from "./workflow-actions";
 import WorkflowHeader from "./workflow-header";
-import { nodeTemplates } from "@/src/types/types";
-
-interface WorkflowPanelProps {
-  name: string;
-  setName: (name: string) => void;
-  workflowFetched: boolean;
-  handleDraft: () => void;
-  updateDraft: () => void;
-  publishWorkflow: () => void;
-  onAddNode: (template: (typeof nodeTemplates)[0]) => void;
-}
+import { WorkflowPanelProps } from "@/src/types";
 
 export default function WorkflowPanel({
   name,

@@ -4,8 +4,8 @@ import { v4 as uuidv4 } from "uuid";
 import { apiClient } from "@/src/lib/apiClient";
 import { useAppContext } from "@/src/contexts/app-context";
 import { transformWorkflowData } from "@/src/lib/transformNode";
-import { nodeTemplates } from "@/src/types/types";
-import { WorkflowNodeData } from "../types/types";
+import { nodeTemplates } from "@/src/types";
+import { WorkflowNodeData } from "@/src/types";
 
 interface UseWorkflowOperationsProps {
   nodes: Node<WorkflowNodeData>[];

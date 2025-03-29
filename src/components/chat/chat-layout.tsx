@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import Sidebar from "./sidebar";
 import ChatInterface from "./chat-interface";
-import { TeamMember } from "@/src/types/types";
+import { TeamMember } from "@/src/types";
 import { useAppContext } from "@/src/contexts/app-context";
 
 export default function ChatLayout() {

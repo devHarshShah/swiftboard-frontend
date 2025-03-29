@@ -16,7 +16,7 @@ import {
   Copy,
   AlertTriangle,
 } from "lucide-react";
-import { ExtendedTask } from "@/src/types/types";
+import { ExtendedTask } from "@/src/types";
 import { useTaskManager } from "@/src/contexts/task-context";
 import {
   AlertDialog,

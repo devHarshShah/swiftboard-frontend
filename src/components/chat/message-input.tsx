@@ -11,18 +11,7 @@ import {
 } from "@/src/components/ui/tooltip";
 import { AnimatePresence } from "framer-motion";
 import { EmojiPicker } from "./emoji-picker";
-
-interface MessageInputProps {
-  input: string;
-  isUploading: boolean;
-  showEmojiPicker: boolean;
-  setInput: (value: string) => void;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleSendMessage: () => void;
-  handleFileInput: () => void;
-  handleEmojiSelect: (emoji: string) => void;
-  toggleEmojiPicker: () => void;
-}
+import { MessageInputProps } from "@/src/types";
 
 export function MessageInput({
   input,

@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Handle, Position, NodeProps, useReactFlow } from "reactflow";
-import { User, WorkflowNodeData } from "@/src/types/types";
+import { User, WorkflowNodeData } from "@/src/types";
 import {
   CircleAlert,
   Settings2,
@@ -18,12 +18,7 @@ import {
 import { UserSelector } from "./user-selector";
 import { apiClient } from "../../lib/apiClient";
 import { useAppContext } from "../../contexts/app-context";
-
-interface Task {
-  id: string;
-  name: string;
-  description: string;
-}
+import { Task } from "@/src/types";
 
 const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
   data,

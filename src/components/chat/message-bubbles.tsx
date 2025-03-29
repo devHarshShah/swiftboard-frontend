@@ -8,26 +8,8 @@ import {
 import { cn } from "@/src/lib/utils";
 import { motion } from "framer-motion";
 import { MessageAttachment } from "./message-attachment";
-import { TeamMember, User } from "@/src/types/types";
+import { MessageBubbleProps } from "@/src/types";
 
-interface Message {
-  id: string;
-  content: string;
-  type: "user" | "bot";
-  timestamp: Date;
-  status?: "sent" | "delivered" | "read";
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  attachments?: any[];
-}
-
-interface MessageBubbleProps {
-  message: Message;
-  isFirstInGroup: boolean;
-  isLastInGroup: boolean;
-  user: User | TeamMember | null;
-  attachmentUrls: Record<string, string>;
-  formatFileSize: (size: number) => string;
-}
 export function MessageBubble({
   message,
   isFirstInGroup,

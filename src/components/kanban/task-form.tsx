@@ -9,17 +9,8 @@ import { DateTimePicker } from "@/src/components/ui/date-timepicker";
 import { UserAssignmentSection } from "../tasks/user-assignment";
 import { TaskBlockingSection } from "../tasks/task-blocking";
 import { cn } from "@/src/lib/utils";
-import { User, statusConfig, ExtendedTask } from "@/src/types/types";
 import { useTaskManager } from "@/src/contexts/task-context";
-
-interface TaskFormProps {
-  task: ExtendedTask;
-  onSubmit: () => void;
-  onCancel: () => void;
-  users: User[];
-  mode: "create" | "edit";
-  config?: typeof statusConfig;
-}
+import { TaskFormProps } from "@/src/types";
 
 export const TaskForm: React.FC<TaskFormProps> = ({
   task,

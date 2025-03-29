@@ -1,7 +1,7 @@
 "use client";
 import { Avatar, AvatarFallback } from "@/src/components/ui/avatar";
 import { Badge } from "@/src/components/ui/badge";
-import { ExtendedTask } from "@/src/types/types";
+import { ExtendedTask } from "@/src/types";
 import { UserAssignmentSection } from "./user-assignment";
 
 export function TaskAssignedUsersCell({ task }: { task: ExtendedTask }) {

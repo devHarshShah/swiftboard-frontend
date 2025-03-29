@@ -2,7 +2,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
-import { ExtendedTask } from "@/src/types/types";
+import { ExtendedTask } from "@/src/types";
 import { TaskNameCell } from "./taskname-cell";
 import { TaskDescriptionCell } from "./taskdescription-cell";
 import { TaskStatusCell } from "./taskstatus-cell";

@@ -36,7 +36,7 @@ import {
 import { apiClient } from "@/src/lib/apiClient";
 import { useAppContext } from "@/src/contexts/app-context";
 import { useWebSocket } from "@/src/contexts/websocket-context";
-import { TeamMember } from "@/src/types/types";
+import { TeamMember } from "@/src/types";
 import { cn } from "@/src/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 

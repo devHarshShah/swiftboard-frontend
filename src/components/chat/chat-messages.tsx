@@ -7,33 +7,8 @@ import { Button } from "@/src/components/ui/button";
 import { MessageBubble } from "./message-bubbles";
 import { TypingIndicator } from "./typing-indicator";
 import { UploadIndicator } from "./upload-indicator";
-import { TeamMember, User } from "@/src/types/types";
+import { ChatMessagesProps } from "@/src/types";
 
-interface Message {
-  id: string;
-  content: string;
-  type: "user" | "bot";
-  timestamp: Date;
-  status?: "sent" | "delivered" | "read";
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  attachments?: any[];
-}
-
-interface DateGroup {
-  [date: string]: Message[];
-}
-
-interface ChatMessagesProps {
-  messages: Message[];
-  isTyping: boolean;
-  isUploading: boolean;
-  groupedMessages: DateGroup;
-  user: TeamMember | null;
-  currentUser: User | null;
-  setInput: (input: string) => void;
-  attachmentUrls: Record<string, string>;
-  formatFileSize: (size: number) => string;
-}
 export function ChatMessages({
   messages,
   isTyping,

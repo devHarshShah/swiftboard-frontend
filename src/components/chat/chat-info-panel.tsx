@@ -13,37 +13,11 @@ import {
   AvatarFallback,
 } from "@/src/components/ui/avatar";
 import { Button } from "@/src/components/ui/button";
-import { TeamMember } from "@/src/types/types";
 import { X, Mail, ImageIcon, File } from "lucide-react";
 import { motion } from "framer-motion";
 import { MessageAttachment } from "./message-attachment";
 import Image from "next/image";
-
-interface Attachment {
-  id: string;
-  filename: string;
-  contentType: string;
-  fileSize: number;
-  url?: string;
-  fetchingUrl?: boolean;
-}
-
-interface Message {
-  id: string;
-  content: string;
-  type: "user" | "bot";
-  timestamp: Date;
-  status?: "sent" | "delivered" | "read";
-  attachments?: Attachment[];
-}
-
-interface ChatInfoPanelProps {
-  user: TeamMember | null;
-  messages: Message[];
-  attachmentUrls: Record<string, string>;
-  formatFileSize: (bytes: number) => string;
-  onClose: () => void;
-}
+import { ChatInfoPanelProps } from "@/src/types";
 
 export function ChatInfoPanel({
   user,

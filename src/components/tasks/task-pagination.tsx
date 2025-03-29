@@ -9,7 +9,7 @@ import {
 } from "@/src/components/ui/select";
 import { Table } from "@tanstack/react-table";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { ExtendedTask } from "@/src/types/types";
+import { ExtendedTask } from "@/src/types";
 
 interface TaskPaginationProps {
   table: Table<ExtendedTask>;

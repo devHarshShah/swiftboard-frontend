@@ -1,4 +1,4 @@
-import { nodeTemplates } from "@/src/types/types";
+import { nodeTemplates } from "@/src/types";
 
 interface NodeTemplateListProps {
   onSelectTemplate: (template: (typeof nodeTemplates)[0]) => void;

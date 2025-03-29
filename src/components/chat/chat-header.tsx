@@ -15,14 +15,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/src/components/ui/tooltip";
-import { TeamMember } from "@/src/types/types";
-
-interface ChatHeaderProps {
-  user: TeamMember | null;
-  userOnline: boolean;
-  chatInfoVisible: boolean;
-  toggleChatInfo: () => void;
-}
+import { ChatHeaderProps } from "@/src/types";
 
 export function ChatHeader({
   user,

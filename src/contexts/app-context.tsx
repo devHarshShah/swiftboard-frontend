@@ -8,18 +8,8 @@ import React, {
   ReactNode,
 } from "react";
 import { apiClient } from "@/src/lib/apiClient";
-import { User, Team, Project } from "../types/types";
-
-interface AppContextType {
-  user: User | null;
-  teams: Team[];
-  projects: Project[];
-  activeTeam: Team["team"] | null;
-  activeProject: Project | null;
-  setActiveTeam: (team: Team["team"]) => void;
-  setActiveProject: (project: Project) => void;
-  loading: boolean;
-}
+import { User, Team, Project } from "@/src/types";
+import { AppContextType } from "@/src/types";
 
 // Create the context
 const AppContext = createContext<AppContextType | undefined>(undefined);

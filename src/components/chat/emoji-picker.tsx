@@ -2,10 +2,7 @@
 import React from "react";
 import { Button } from "@/src/components/ui/button";
 import { motion } from "framer-motion";
-
-interface EmojiPickerProps {
-  onEmojiSelect: (emoji: string) => void;
-}
+import { EmojiPickerProps } from "@/src/types";
 
 export function EmojiPicker({ onEmojiSelect }: EmojiPickerProps) {
   // Common emojis for quick access

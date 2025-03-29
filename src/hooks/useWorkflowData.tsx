@@ -9,7 +9,7 @@ import {
 } from "reactflow";
 import { apiClient } from "@/src/lib/apiClient";
 import { useAppContext } from "@/src/contexts/app-context";
-import { WorkflowNodeData } from "../types/types";
+import { WorkflowNodeData } from "@/src/types";
 
 // Define initial states
 const initialNodes: Node<WorkflowNodeData>[] = [

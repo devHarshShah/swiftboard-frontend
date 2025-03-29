@@ -8,15 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/src/components/ui/popover";
-import { User } from "@/src/types/types";
-
-interface UserSelectorProps {
-  users: User[];
-  selectedUsers: User[];
-  onToggleUser: (userId: string) => void;
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-}
+import { UserSelectorProps } from "@/src/types";
 
 export const UserSelector: React.FC<UserSelectorProps> = ({
   users,
