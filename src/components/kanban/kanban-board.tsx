@@ -1,181 +1,59 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
-import { apiClient } from "@/src/lib/apiClient";
+import React, { useMemo } from "react";
 import { TaskColumn } from "./task-coulmn";
 import { TaskForm } from "./task-form";
-import {
-  Task,
-  TaskStatus,
-  TaskStatusKey,
-  User,
-  NewTaskData,
-  GroupedTasks,
-  statusConfig,
-} from "@/src/types/types";
-import { useAppContext } from "@/src/contexts/app-context";
+import { TaskStatus, GroupedTasks, statusConfig } from "@/src/types/types";
+import { useTaskManager } from "@/src/contexts/task-context";
 
 const KanbanBoard: React.FC = () => {
-  const [tasks, setTasks] = useState<GroupedTasks>({
-    [TaskStatus.TODO]: [],
-    [TaskStatus.IN_PROGRESS]: [],
-    [TaskStatus.DONE]: [],
-  });
-  const [newTask, setNewTask] = useState<NewTaskData>({
-    name: "",
-    description: "",
-    dueDate: new Date(),
-    expectedHours: 0,
-    userIds: [],
-    blockedBy: [],
-  });
-  const [isAddingTask, setIsAddingTask] = useState(false);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
-  const { activeTeam, activeProject } = useAppContext();
-  const projectId = activeProject?.id;
-  const teamId = activeTeam?.id;
+  const {
+    tasks,
+    editingTask,
+    isLoading,
+    addNewTask,
+    moveTask,
+    deleteTask,
+    startEditing,
+    cancelEditing,
+    handleSaveEditing,
+    users,
+  } = useTaskManager();
 
-  const fetchUsers = useCallback(async () => {
-    if (!teamId) return;
+  // Group tasks by status for the kanban columns
+  const groupedTasks = useMemo(() => {
+    return tasks.reduce(
+      (acc, task) => {
+        if (!acc[task.status]) {
+          acc[task.status] = [];
+        }
+        acc[task.status].push(task);
+        return acc;
+      },
+      {
+        [TaskStatus.TODO]: [],
+        [TaskStatus.IN_PROGRESS]: [],
+        [TaskStatus.DONE]: [],
+      } as GroupedTasks,
+    );
+  }, [tasks]);
 
-    try {
-      const response = await apiClient(`/api/teams/${teamId}/members`);
-      const userData = await response.json();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const users = userData.map((member: any) => member.user);
-      setUsers(users);
-    } catch (error) {
-      console.error("Failed to fetch users", error);
+  // Handle creating a new task
+  const handleAddNewTask = () => {
+    if (editingTask) {
+      // If already editing, cancel it first
+      cancelEditing();
     }
-  }, [teamId]);
-
-  const fetchTasks = useCallback(async () => {
-    if (!projectId) return;
-
-    try {
-      const response = await apiClient(`/api/project/${projectId}/tasks`);
-      const data: Task[] = await response.json();
-
-      const groupedTasks = data.reduce(
-        (acc, task) => {
-          acc[task.status] = [...(acc[task.status] || []), task];
-          return acc;
-        },
-        {
-          [TaskStatus.TODO]: [],
-          [TaskStatus.IN_PROGRESS]: [],
-          [TaskStatus.DONE]: [],
-        } as GroupedTasks,
-      );
-
-      setTasks(groupedTasks);
-    } catch (error) {
-      console.error("Failed to fetch tasks", error);
-    }
-  }, [projectId]);
-
-  const createTask = async (taskData: Task | NewTaskData) => {
-    if (!taskData.name.trim() || !projectId) return;
-
-    try {
-      const isNewTask = "userIds" in taskData;
-      await apiClient(`/api/project/${projectId}/tasks`, {
-        method: "POST",
-        body: JSON.stringify({
-          name: taskData.name,
-          description: taskData.description,
-          status: TaskStatus.TODO,
-          assignedUserIds: isNewTask
-            ? taskData.userIds
-            : taskData.taskAssignments.map((a) => a.user.id),
-          blockedTaskIds: isNewTask
-            ? taskData.blockedBy.map((task) => task.id)
-            : taskData.blockedBy?.map((task) => task.id) || [],
-          dueDate: taskData.dueDate,
-        }),
-      });
-
-      fetchTasks();
-      setNewTask({
-        name: "",
-        description: "",
-        dueDate: new Date(),
-        expectedHours: 0,
-        userIds: [],
-        blockedBy: [],
-      });
-      setIsAddingTask(false);
-    } catch (error) {
-      console.error("Failed to create task", error);
-    }
+    addNewTask();
   };
 
-  const moveTask = async (task: Task, newStatus: TaskStatusKey) => {
-    if (!projectId) return;
-
-    try {
-      await apiClient(`/api/project/${projectId}/tasks/${task.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          status: newStatus,
-        }),
-      });
-      fetchTasks();
-    } catch (error) {
-      console.error("Failed to move task", error);
-    }
-  };
-
-  const deleteTask = async (taskId: string) => {
-    if (!projectId) return;
-
-    try {
-      await apiClient(`/api/project/${projectId}/tasks/${taskId}`, {
-        method: "DELETE",
-      });
-      fetchTasks();
-    } catch (error) {
-      console.error("Failed to delete task", error);
-    }
-  };
-
-  const updateTask = async (taskToUpdate: Task | NewTaskData) => {
-    if (!projectId) return;
-
-    // Type guard to check if taskToUpdate is a Task
-    if (!("id" in taskToUpdate)) return;
-
-    try {
-      await apiClient(`/api/project/${projectId}/tasks/${taskToUpdate.id}`, {
-        method: "PUT",
-        body: JSON.stringify({
-          name: taskToUpdate.name,
-          description: taskToUpdate.description,
-          assignedUserIds: taskToUpdate.taskAssignments.map((a) => a.user.id),
-          blockedTaskIds: taskToUpdate.blockedBy?.map((task) => task.id) || [],
-          dueDate: taskToUpdate.dueDate,
-        }),
-      });
-
-      fetchTasks();
-      setEditingTask(null);
-    } catch (error) {
-      console.error("Failed to update task", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchTasks();
-    fetchUsers();
-  }, [fetchTasks, fetchUsers]);
-
-  const handleCancelEdit = () => {
-    setEditingTask(null);
-  };
-
-  const handleStartEdit = (task: Task) => {
-    setEditingTask(task);
-  };
+  // Render loading state if data is being fetched
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-3 gap-6 p-6 bg-background">
@@ -183,34 +61,29 @@ const KanbanBoard: React.FC = () => {
         <TaskColumn
           key={status}
           status={status}
-          tasks={tasks[status]}
+          tasks={groupedTasks[status].filter(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (task) => !(task as any).isNew || (task as any).status !== status,
+          )}
           config={statusConfig}
           onMoveTask={moveTask}
           onDeleteTask={deleteTask}
-          onEditTask={handleStartEdit}
-          onAddTask={() => setIsAddingTask(true)}
+          onEditTask={startEditing}
+          onAddTask={handleAddNewTask}
           isAddingAllowed={status === TaskStatus.TODO}
-          isAddingActive={isAddingTask && status === TaskStatus.TODO}
-        >
-          {status === TaskStatus.TODO && isAddingTask && (
-            <TaskForm
-              task={newTask}
-              onSubmit={createTask}
-              onCancel={() => setIsAddingTask(false)}
-              users={users}
-              blockingTasks={tasks[TaskStatus.TODO]}
-              mode="create"
-            />
+          isAddingActive={Boolean(
+            editingTask?.isNew && editingTask.status === TaskStatus.TODO,
           )}
-
+        >
+          {/* Show task form for new or editing tasks */}
           {editingTask && editingTask.status === status && (
             <TaskForm
               task={editingTask}
-              onSubmit={updateTask}
-              onCancel={handleCancelEdit}
+              onSubmit={handleSaveEditing}
+              onCancel={cancelEditing}
               users={users}
-              blockingTasks={tasks[TaskStatus.TODO]}
-              mode="edit"
+              mode={editingTask.isNew ? "create" : "edit"}
+              config={statusConfig}
             />
           )}
         </TaskColumn>

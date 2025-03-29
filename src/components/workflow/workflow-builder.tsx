@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import ReactFlow, { Background, Controls, MiniMap, NodeTypes } from "reactflow";
 import "reactflow/dist/style.css";
-import WorkflowNode from "@/src/components/workflow-node";
+import WorkflowNode from "@/src/components/workflow/workflow-node";
 import { useWorkflowData } from "@/src/hooks/useWorkflowData";
 import { useWorkflowOperations } from "@/src/hooks/useWorkFlowOperations";
 import WorkflowPanel from "./workflow-panel";

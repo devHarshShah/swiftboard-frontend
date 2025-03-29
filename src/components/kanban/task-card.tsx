@@ -35,6 +35,7 @@ interface TaskCardProps {
   onMove: (newStatus: TaskStatusKey) => void;
   onDelete: () => void;
   onEdit: () => void;
+  isDisabled?: boolean;
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({

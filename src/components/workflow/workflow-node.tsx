@@ -15,9 +15,9 @@ import {
   Check,
   Lock,
 } from "lucide-react";
-import { UserSelector } from "./kanban/user-selector";
-import { apiClient } from "../lib/apiClient";
-import { useAppContext } from "../contexts/app-context";
+import { UserSelector } from "./user-selector";
+import { apiClient } from "../../lib/apiClient";
+import { useAppContext } from "../../contexts/app-context";
 
 interface Task {
   id: string;
