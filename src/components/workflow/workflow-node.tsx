@@ -1,6 +1,8 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Handle, Position, NodeProps, useReactFlow } from "reactflow";
-import { User, WorkflowNodeData } from "@/src/types";
+import { User } from "@/src/types/user";
+import { Task } from "@/src/types/task";
+import { WorkflowNodeData, NodeType } from "@/src/types/workflow";
 import {
   CircleAlert,
   Settings2,
@@ -18,7 +20,30 @@ import {
 import { UserSelector } from "./user-selector";
 import { apiClient } from "../../lib/apiClient";
 import { useAppContext } from "../../contexts/app-context";
-import { Task } from "@/src/types";
+import { TeamMemberResponse } from "@/src/types";
+
+// Define interfaces for the component's local state
+interface LocalWorkflowData {
+  label: string;
+  description: string;
+  conditionType: string;
+  userIds: string[];
+  blockedBy: Task[];
+  blocking: Task[];
+}
+
+// Custom event for node configuration updates
+interface NodeConfigUpdateEvent {
+  nodeId: string;
+  updatedData: WorkflowNodeData;
+}
+
+// Declare the custom event
+declare global {
+  interface WindowEventMap {
+    nodeConfigUpdate: CustomEvent<NodeConfigUpdateEvent>;
+  }
+}
 
 const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
   data,
@@ -37,10 +62,16 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
 
     try {
       const response = await apiClient(`/api/teams/${teamId}/members`);
-      const userData = await response.json();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const users = userData.map((member: any) => member.user);
-      setUsers(users);
+      const userData = (await response.json()) as TeamMemberResponse[];
+      // Map team member response to users
+      const fetchedUsers = userData.map(
+        (member: TeamMemberResponse) =>
+          ({
+            ...member.user,
+            name: member.user.name || "", // Ensure name is never undefined
+          }) as User,
+      );
+      setUsers(fetchedUsers);
     } catch (error) {
       console.error("Failed to fetch users", error);
     }
@@ -50,13 +81,18 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
     fetchUsers();
   }, [fetchUsers]);
 
-  const [localData, setLocalData] = useState({
+  const [localData, setLocalData] = useState<LocalWorkflowData>({
     label: data.label,
     description: data.description,
-    conditionType: data.config?.conditionType || "Expression",
-    userIds: data.config?.userIds || [],
-    blockedBy: data.config?.blockedBy || [],
-    blocking: data.config?.blocking || [],
+    conditionType:
+      typeof data.config?.conditionType === "string"
+        ? data.config.conditionType
+        : "Expression",
+    userIds: Array.isArray(data.config?.userIds) ? data.config.userIds : [],
+    blockedBy: Array.isArray(data.config?.blockedBy)
+      ? data.config.blockedBy
+      : [],
+    blocking: Array.isArray(data.config?.blocking) ? data.config.blocking : [],
   });
 
   // Handle input changes
@@ -85,11 +121,12 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
               id: sourceNode.id,
               name: sourceNode.data.label,
               description: sourceNode.data.description,
-            };
+              status: "TODO", // Default status for task relationships
+            } as Task;
           }
           return null;
         })
-        .filter(Boolean);
+        .filter((node): node is Task => node !== null);
 
       // Find nodes that this task is blocking (outgoing edges)
       const outgoingEdges = edges.filter((edge) => edge.source === id);
@@ -101,36 +138,35 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
               id: targetNode.id,
               name: targetNode.data.label,
               description: targetNode.data.description,
-            };
+              status: "TODO", // Default status for task relationships
+            } as Task;
           }
           return null;
         })
-        .filter(Boolean);
+        .filter((node): node is Task => node !== null);
 
       // Update local data with blocked by nodes
       if (blockedByNodes.length > 0 || blockingNodes.length > 0) {
         setLocalData((prev) => {
           // Handle blockedBy relationship
           const existingBlockedByIds: string[] = prev.blockedBy.map(
-            (task: { id: string }) => task.id,
+            (task: Task) => task.id,
           );
           const newBlockedBy = [
             ...prev.blockedBy,
             ...blockedByNodes.filter(
-              (node): node is NonNullable<typeof node> =>
-                node !== null && !existingBlockedByIds.includes(node.id),
+              (node) => !existingBlockedByIds.includes(node.id),
             ),
           ];
 
           // Handle blocking relationship
           const existingBlockingIds: string[] = prev.blocking
-            ? prev.blocking.map((task: { id: string }) => task.id)
+            ? prev.blocking.map((task: Task) => task.id)
             : [];
           const newBlocking = [
             ...(prev.blocking || []),
             ...blockingNodes.filter(
-              (node): node is NonNullable<typeof node> =>
-                node !== null && !existingBlockingIds.includes(node.id),
+              (node) => !existingBlockingIds.includes(node.id),
             ),
           ];
 
@@ -145,10 +181,11 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
   }, [id, data.type, getEdges, getNode]);
 
   const handleApplyChanges = useCallback(() => {
-    const updatedData = {
+    const updatedData: WorkflowNodeData = {
       ...data,
       label: localData.label,
       description: localData.description,
+      type: data.type as NodeType,
       config: {
         ...data.config,
         conditionType:
@@ -170,8 +207,8 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
   const handleUserToggle = (userId: string) => {
     const currentUserIds = localData.userIds || [];
 
-    const updatedUserIds: string[] = currentUserIds.includes(userId)
-      ? currentUserIds.filter((id: string) => id !== userId)
+    const updatedUserIds = currentUserIds.includes(userId)
+      ? currentUserIds.filter((id) => id !== userId)
       : [...currentUserIds, userId];
 
     setLocalData((prev) => ({
@@ -180,14 +217,14 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
     }));
   };
 
-  const getSelectedUsers = () => {
+  const getSelectedUsers = (): User[] => {
     const selectedUserIds = localData.userIds || [];
     return selectedUserIds
-      .map((userId: string) => users.find((user: User) => user.id === userId))
-      .filter((user: User): user is User => Boolean(user)) as User[];
+      .map((userId) => users.find((user) => user.id === userId))
+      .filter((user): user is User => Boolean(user));
   };
 
-  const getNodeStyles = () => {
+  const getNodeStyles = (): string => {
     const baseStyle =
       "px-4 py-3 rounded-lg shadow-lg transition-all duration-200";
     const selectedStyle = selected
@@ -212,7 +249,7 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
     }
   };
 
-  const getIconColor = () => {
+  const getIconColor = (): string => {
     switch (data.type) {
       case "start":
         return "text-green-600";
@@ -258,19 +295,25 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
   // Display assigned users badge if task node has assignments
   const hasAssignments =
     data.type === "task" &&
-    ((data.config?.userIds && data.config.userIds.length > 0) ||
+    ((data.config?.userIds &&
+      Array.isArray(data.config.userIds) &&
+      data.config.userIds.length > 0) ||
       (localData.userIds && localData.userIds.length > 0));
 
   // Display blocked by badge if task node has dependencies
   const hasBlockers =
     data.type === "task" &&
-    ((data.config?.blockedBy && data.config.blockedBy.length > 0) ||
+    ((data.config?.blockedBy &&
+      Array.isArray(data.config.blockedBy) &&
+      data.config.blockedBy.length > 0) ||
       (localData.blockedBy && localData.blockedBy.length > 0));
 
   // Display blocking badge if task node is blocking other tasks
   const isBlocking =
     data.type === "task" &&
-    ((data.config?.blocking && data.config.blocking.length > 0) ||
+    ((data.config?.blocking &&
+      Array.isArray(data.config.blocking) &&
+      data.config.blocking.length > 0) ||
       (localData.blocking && localData.blocking.length > 0));
 
   return (
@@ -309,7 +352,8 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
             {hasAssignments && (
               <div className="bg-teal-100 text-teal-800 text-xs px-2 py-0.5 rounded-full flex items-center">
                 <Users size={12} className="mr-1" />
-                {(data.config?.userIds || localData.userIds).length}
+                {((data.config?.userIds || []) as string[]).length ||
+                  localData.userIds.length}
               </div>
             )}
             {hasBlockers && (

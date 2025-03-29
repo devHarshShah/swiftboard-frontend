@@ -36,7 +36,7 @@ import {
 import { apiClient } from "@/src/lib/apiClient";
 import { useAppContext } from "@/src/contexts/app-context";
 import { useWebSocket } from "@/src/contexts/websocket-context";
-import { TeamMember } from "@/src/types";
+import { TeamMember, TeamMemberResponse } from "@/src/types/user";
 import { cn } from "@/src/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -252,34 +252,34 @@ export default function Sidebar({
       setIsLoading(true);
       try {
         const response = await apiClient(`/api/teams/${teamId}/members`);
-        const data = await response.json();
+        const data = (await response.json()) as TeamMemberResponse[];
 
         // Filter out the current user from the list
         const filteredData = data.filter(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (member: any) => member.user.id !== currentUser?.id,
+          (member: TeamMemberResponse) => member.user.id !== currentUser?.id,
         );
 
         // Use the onlineUsers set to determine who's online
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const teamMembers = filteredData.map((member: any) => {
-          const userId = member.user.id;
-          const isOnline = onlineUsers.has(userId);
+        const teamMembers: TeamMember[] = filteredData.map(
+          (member: TeamMemberResponse) => {
+            const userId = member.user.id;
+            const isOnline = onlineUsers.has(userId);
 
-          return {
-            id: userId,
-            name: member.user.name || member.user.email.split("@")[0],
-            email: member.user.email,
-            avatar: member.user.avatar,
-            role: member.role,
-            status: isOnline ? "online" : "offline",
-            lastActive: new Date(
-              Date.now() - Math.floor(Math.random() * 24 * 60 * 60 * 1000),
-            ),
-            // Don't show unread count for active conversation
-            unreadCount: userId === activeConversation ? 0 : 0, // Initialize with 0 and fetch real counts separately
-          };
-        });
+            return {
+              id: userId,
+              name: member.user.name || member.user.email.split("@")[0],
+              email: member.user.email,
+              avatar: member.user.avatar,
+              role: member.role,
+              status: isOnline ? "online" : "offline",
+              lastActive: new Date(
+                Date.now() - Math.floor(Math.random() * 24 * 60 * 60 * 1000),
+              ),
+              // Don't show unread count for active conversation
+              unreadCount: userId === activeConversation ? 0 : 0, // Initialize with 0 and fetch real counts separately
+            };
+          },
+        );
 
         // Sort: online first, then with unread messages, then alphabetically
         const sortedMembers = teamMembers.sort(

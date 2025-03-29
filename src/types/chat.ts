@@ -13,6 +13,14 @@ export interface Attachment {
 export type MessageType = "user" | "bot";
 export type MessageStatus = "sent" | "delivered" | "read";
 
+// Define proper types for sender and receiver info
+export interface MessageParticipantInfo {
+  id: string;
+  name?: string;
+  email?: string;
+  avatar?: string;
+}
+
 export interface Message {
   id: string;
   content: string;
@@ -20,10 +28,8 @@ export interface Message {
   timestamp: Date;
   status?: MessageStatus;
   attachments?: Attachment[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  senderInfo?: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  receiverInfo?: any;
+  senderInfo?: MessageParticipantInfo;
+  receiverInfo?: MessageParticipantInfo;
 }
 
 export interface ServerMessage {
@@ -111,4 +117,22 @@ export interface TypingIndicatorProps {
 
 export interface UploadIndicatorProps {
   isUploading: boolean;
+}
+
+export interface MessageApiResponse {
+  id: string;
+  text: string;
+  senderId: string;
+  receiverId: string;
+  createdAt: string;
+  attachments?: Array<{
+    id: string;
+    filename: string;
+    contentType?: string;
+    fileType?: string;
+    fileSize: number;
+    s3Url?: string;
+  }>;
+  sender?: MessageParticipantInfo;
+  receiver?: MessageParticipantInfo;
 }

@@ -21,7 +21,12 @@ import { ChatEmptyState } from "./chat-empty-state";
 import { TypingIndicator } from "./typing-indicator";
 import { UploadIndicator } from "./upload-indicator";
 import { ChatInfoPanel } from "./chat-info-panel";
-import { ServerMessage, Message } from "@/src/types";
+import {
+  Message,
+  ServerMessage,
+  Attachment,
+  MessageApiResponse,
+} from "@/src/types/chat";
 
 export default function ChatInterface({
   userId,
@@ -261,35 +266,42 @@ export default function ChatInterface({
         );
         const data = await response.json();
 
-        // Format messages based on actual API response structure
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const formattedMessages = data.map((msg: any) => ({
-          id: msg.id,
-          content: msg.text, // API returns 'text', map to 'content' for our component
-          type: msg.senderId === userId ? "user" : "bot",
-          timestamp: new Date(msg.createdAt),
-          status: "read",
-          attachments: msg.attachments
-            ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              msg.attachments.map((att: any) => ({
-                id: att.id,
-                filename: att.filename,
-                contentType: att.contentType || att.fileType, // Handle both contentType and fileType
-                fileSize: att.fileSize,
-                fetchingUrl: false, // Initialize the tracking field
-              }))
-            : undefined,
-          // Store additional sender/receiver info if needed
-          senderInfo: msg.sender,
-          receiverInfo: msg.receiver,
-        }));
+        // Apply the type to the data
+        const formattedMessages = (data as MessageApiResponse[]).map((msg) => {
+          // Create properly typed message object
+          const message: Message = {
+            id: msg.id,
+            content: msg.text, // API returns 'text', map to 'content' for our component
+            type: msg.senderId === userId ? "user" : "bot",
+            timestamp: new Date(msg.createdAt),
+            status: "read",
+            attachments: msg.attachments
+              ? msg.attachments.map((att) => {
+                  // Create properly typed attachment object
+                  const attachment: Attachment = {
+                    id: att.id,
+                    filename: att.filename,
+                    contentType: att.contentType || att.fileType || "", // Handle both contentType and fileType
+                    fileSize: att.fileSize,
+                    fetchingUrl: false, // Initialize the tracking field
+                    s3Url: att.s3Url,
+                  };
+                  return attachment;
+                })
+              : undefined,
+            // Store additional sender/receiver info if needed
+            senderInfo: msg.sender,
+            receiverInfo: msg.receiver,
+          };
+
+          return message;
+        });
 
         setMessages(formattedMessages);
       } catch (error) {
         console.error("Failed to load messages:", error);
       }
     };
-
     loadMessages();
 
     // Cleanup event listeners and timeouts when component unmounts

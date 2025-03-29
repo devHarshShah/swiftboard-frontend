@@ -2,8 +2,19 @@
 import React, { useMemo } from "react";
 import { TaskColumn } from "./task-coulmn";
 import { TaskForm } from "./task-form";
-import { TaskStatus, GroupedTasks, statusConfig } from "@/src/types";
+import {
+  TaskStatus,
+  GroupedTasks,
+  Task,
+  ExtendedTask,
+  statusConfig,
+} from "@/src/types";
 import { useTaskManager } from "@/src/contexts/task-context";
+
+// Type guard function to check if a task is an ExtendedTask with isNew property
+function isExtendedTask(task: Task): task is ExtendedTask {
+  return "isNew" in task;
+}
 
 const KanbanBoard: React.FC = () => {
   const {
@@ -49,7 +60,7 @@ const KanbanBoard: React.FC = () => {
   // Render loading state if data is being fetched
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
       </div>
     );
@@ -62,8 +73,8 @@ const KanbanBoard: React.FC = () => {
           key={status}
           status={status}
           tasks={groupedTasks[status].filter(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (task) => !(task as any).isNew || (task as any).status !== status,
+            (task) =>
+              !isExtendedTask(task) || !task.isNew || task.status !== status,
           )}
           config={statusConfig}
           onMoveTask={moveTask}

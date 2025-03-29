@@ -9,9 +9,15 @@ import {
 } from "reactflow";
 import { apiClient } from "@/src/lib/apiClient";
 import { useAppContext } from "@/src/contexts/app-context";
-import { WorkflowNodeData } from "@/src/types";
+import {
+  WorkflowNodeData,
+  NodeType,
+  BackendWorkflowData,
+  BackendWorkflowNode,
+  BackendWorkflowEdge,
+  NodeConfigUpdateEvent,
+} from "@/src/types/workflow";
 
-// Define initial states
 const initialNodes: Node<WorkflowNodeData>[] = [
   {
     id: "1",
@@ -98,7 +104,7 @@ export function useWorkflowData() {
           return;
         }
 
-        let data;
+        let data: BackendWorkflowData;
         try {
           data = await response.json();
         } catch (parseError) {
@@ -115,48 +121,50 @@ export function useWorkflowData() {
         if (data && Array.isArray(data.nodes) && Array.isArray(data.edges)) {
           try {
             // Transform nodes from backend format
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const transformedNodes = data.nodes.map((node: any) => ({
-              id: node.id,
-              type: "workflowNode",
-              position: {
-                x: node.position?.x || node.positionX || 0,
-                y: node.position?.y || node.positionY || 0,
-              },
-              data: {
-                label: node.data?.label || "Unnamed Node",
-                type: node.data?.type || "default",
-                description: node.data?.description || "",
-                icon: node.data?.icon || "default",
-                config:
-                  typeof node.data?.config === "string"
-                    ? JSON.parse(node.data.config || "{}")
-                    : node.data?.config || {},
-              },
-              width: node.width || 225,
-              height: node.height || 66,
-              selected: node.selected || false,
-              dragging: node.dragging || false,
-            }));
+            const transformedNodes = data.nodes.map(
+              (node: BackendWorkflowNode) => ({
+                id: node.id,
+                type: "workflowNode",
+                position: {
+                  x: node.position?.x || node.positionX || 0,
+                  y: node.position?.y || node.positionY || 0,
+                },
+                data: {
+                  label: node.data?.label || "Unnamed Node",
+                  type: (node.data?.type || "default") as NodeType,
+                  description: node.data?.description || "",
+                  icon: node.data?.icon || "default",
+                  config:
+                    typeof node.data?.config === "string"
+                      ? JSON.parse(node.data.config || "{}")
+                      : node.data?.config || {},
+                },
+                width: node.width || 225,
+                height: node.height || 66,
+                selected: node.selected || false,
+                dragging: node.dragging || false,
+              }),
+            ) as Node<WorkflowNodeData>[];
 
             // Transform edges from backend format
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const transformedEdges = data.edges.map((edge: any) => ({
-              id: edge.id,
-              type: edge.type || "smoothstep",
-              source: edge.source,
-              target: edge.target,
-              sourceHandle: edge.sourceHandle,
-              targetHandle: edge.targetHandle,
-              animated: edge.animated || false,
-              style:
-                typeof edge.style === "string"
-                  ? JSON.parse(edge.style || "{}")
-                  : edge.style || {
-                      stroke: "#4f46e5",
-                      strokeWidth: 2,
-                    },
-            }));
+            const transformedEdges = data.edges.map(
+              (edge: BackendWorkflowEdge) => ({
+                id: edge.id,
+                type: edge.type || "smoothstep",
+                source: edge.source,
+                target: edge.target,
+                sourceHandle: edge.sourceHandle,
+                targetHandle: edge.targetHandle,
+                animated: edge.animated || false,
+                style:
+                  typeof edge.style === "string"
+                    ? JSON.parse(edge.style || "{}")
+                    : edge.style || {
+                        stroke: "#4f46e5",
+                        strokeWidth: 2,
+                      },
+              }),
+            ) as Edge[];
 
             setNodes(transformedNodes);
             setEdges(transformedEdges);
@@ -196,7 +204,7 @@ export function useWorkflowData() {
 
   // Listen for node config updates from the WorkflowNode component
   useEffect(() => {
-    const handleNodeUpdate = (event: CustomEvent) => {
+    const handleNodeUpdate = (event: CustomEvent<NodeConfigUpdateEvent>) => {
       const { nodeId, updatedData } = event.detail;
 
       setNodes((nds) =>

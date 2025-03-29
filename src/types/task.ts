@@ -126,8 +126,10 @@ export interface TaskManagerContextType {
   startEditing: (task: ExtendedTask) => void;
   cancelEditing: () => void;
   handleSaveEditing: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  updateEditingTask: (field: string, value: any) => void;
+  updateEditingTask: <K extends keyof ExtendedTask>(
+    field: K,
+    value: ExtendedTask[K] | undefined,
+  ) => void;
   toggleTaskCompletion: (task: Task) => void;
   moveTask: (task: Task, newStatus: TaskStatusKey) => void;
   deleteTask: (taskId: string) => void;

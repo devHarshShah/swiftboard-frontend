@@ -27,7 +27,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 
   const handleTextChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    field: string,
+    field: "name" | "description",
   ) => {
     updateEditingTask(field, e.target.value);
   };

@@ -24,3 +24,13 @@ export interface UserSelectorProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
 }
+
+export interface TeamMemberResponse {
+  user: {
+    id: string;
+    name?: string;
+    email: string;
+    avatar?: string;
+  };
+  role: string;
+}

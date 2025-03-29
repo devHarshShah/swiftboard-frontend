@@ -4,7 +4,12 @@ import { Plus } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import { TaskCard } from "./task-card";
 import { useTaskManager } from "@/src/contexts/task-context";
-import { TaskColumnProps } from "@/src/types";
+import { TaskColumnProps, Task, ExtendedTask } from "@/src/types";
+
+// Type guard to check if a task is an ExtendedTask with isNew property
+function isExtendedTask(task: Task): task is ExtendedTask {
+  return "isNew" in task;
+}
 
 export const TaskColumn: React.FC<TaskColumnProps> = ({
   status,
@@ -15,14 +20,15 @@ export const TaskColumn: React.FC<TaskColumnProps> = ({
   onEditTask,
   onAddTask,
   isAddingAllowed,
-  isAddingActive, // New prop to better control UI state
+  isAddingActive,
   children,
 }) => {
   const { editingTask } = useTaskManager();
 
   // Status count - only count non-new tasks for display
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const taskCount = tasks.filter((task) => !(task as any).isNew).length;
+  const taskCount = tasks.filter(
+    (task) => !isExtendedTask(task) || !task.isNew,
+  ).length;
 
   return (
     <div
@@ -67,8 +73,8 @@ export const TaskColumn: React.FC<TaskColumnProps> = ({
 
         {/* Task Cards */}
         {tasks
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .filter((task) => !(task as any).isNew) // Filter out new tasks as they appear in the form
+          // Filter out new tasks as they appear in the form
+          .filter((task) => !isExtendedTask(task) || !task.isNew)
           .map((task) => (
             <TaskCard
               key={task.id}

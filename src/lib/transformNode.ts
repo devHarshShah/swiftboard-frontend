@@ -1,7 +1,18 @@
 import { Node, Edge } from "reactflow";
+import {
+  WorkflowNodeData,
+  NodeWithRelationships,
+  TransformResult,
+  TransformedEdge,
+  TransformedNode,
+  EdgeStyle,
+} from "@/src/types/workflow";
 
-const processTaskRelationships = (nodes: Node[], edges: Edge[]) => {
-  const nodeMap = new Map();
+const processTaskRelationships = (
+  nodes: Node<WorkflowNodeData>[],
+  edges: Edge[],
+): Node<WorkflowNodeData>[] => {
+  const nodeMap = new Map<string, NodeWithRelationships>();
 
   // First pass: initialize all task nodes
   nodes.forEach((node) => {
@@ -45,7 +56,7 @@ const processTaskRelationships = (nodes: Node[], edges: Edge[]) => {
   // Final pass: update nodes with relationship data
   return nodes.map((node) => {
     if (nodeMap.has(node.id)) {
-      const nodeData = nodeMap.get(node.id);
+      const nodeData = nodeMap.get(node.id)!;
       const config =
         typeof node.data.config === "string"
           ? JSON.parse(node.data.config)
@@ -68,15 +79,17 @@ const processTaskRelationships = (nodes: Node[], edges: Edge[]) => {
   });
 };
 
-export const transformWorkflowData = (nodes: Node[], edges: Edge[]) => {
+export const transformWorkflowData = (
+  nodes: Node<WorkflowNodeData>[],
+  edges: Edge[],
+): TransformResult => {
   // Process task relationships
   const processedNodes = processTaskRelationships(nodes, edges);
 
   // Transform nodes for API
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const transformedNodes = processedNodes.map((node: any) => ({
+  const transformedNodes: TransformedNode[] = processedNodes.map((node) => ({
     id: node.id,
-    type: node.type,
+    type: node.type || "default",
     positionX: node.position.x,
     positionY: node.position.y,
     positionAbsoluteX: node.position.x,
@@ -95,19 +108,23 @@ export const transformWorkflowData = (nodes: Node[], edges: Edge[]) => {
   }));
 
   // Transform edges for API
-  const transformedEdges = edges.map((edge) => ({
-    id: edge.id,
-    type: edge.type,
-    source: edge.source,
-    target: edge.target,
-    sourceHandle: edge.sourceHandle,
-    targetHandle: edge.targetHandle,
-    animated: edge.animated || false,
-    style: JSON.stringify({
-      stroke: edge.style?.stroke || "#4f46e5",
-      strokeWidth: edge.style?.strokeWidth || 2,
-    }),
-  }));
+  const transformedEdges: TransformedEdge[] = edges.map((edge) => {
+    const style: EdgeStyle = {
+      stroke: (edge.style as EdgeStyle)?.stroke || "#4f46e5",
+      strokeWidth: (edge.style as EdgeStyle)?.strokeWidth || 2,
+    };
+
+    return {
+      id: edge.id,
+      type: edge.type,
+      source: edge.source,
+      target: edge.target,
+      sourceHandle: edge.sourceHandle,
+      targetHandle: edge.targetHandle,
+      animated: edge.animated || false,
+      style: JSON.stringify(style),
+    };
+  });
 
   return { transformedNodes, transformedEdges };
 };

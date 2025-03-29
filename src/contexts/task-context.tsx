@@ -8,9 +8,15 @@ import React, {
 } from "react";
 import { apiClient } from "@/src/lib/apiClient";
 import { useAppContext } from "@/src/contexts/app-context";
-import { TaskStatusKey, Task, User } from "@/src/types";
-import { ExtendedTask } from "@/src/types";
-import { TaskManagerContextType } from "@/src/types";
+import {
+  TaskStatusKey,
+  Task,
+  User,
+  ExtendedTask,
+  TaskManagerContextType,
+  TeamMemberResponse,
+  TaskAssignment,
+} from "@/src/types";
 
 const TaskManagerContext = createContext<TaskManagerContextType | undefined>(
   undefined,
@@ -37,10 +43,15 @@ export function TaskManagerProvider({
 
     try {
       const response = await apiClient(`/api/teams/${teamId}/members`);
-      const userData = await response.json();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const users = userData.map((member: any) => member.user);
-      setUsers(users);
+      const userData = (await response.json()) as TeamMemberResponse[];
+      // Transform team member response to users
+      const fetchedUsers: User[] = userData.map(
+        (member: TeamMemberResponse) => ({
+          ...member.user,
+          name: member.user.name || member.user.email.split("@")[0], // Use email prefix as fallback name
+        }),
+      );
+      setUsers(fetchedUsers);
     } catch (error) {
       console.error("Failed to fetch users", error);
     }
@@ -56,7 +67,7 @@ export function TaskManagerProvider({
       const data: Task[] = await response.json();
 
       // Transform tasks to include additional properties
-      const extendedTasks = data.map((task) => ({
+      const extendedTasks: ExtendedTask[] = data.map((task) => ({
         ...task,
         assignedUsers: task.taskAssignments.map(
           (assignment) =>
@@ -108,13 +119,16 @@ export function TaskManagerProvider({
         (a) => a.user.id === userId,
       );
 
-      const updatedAssignments = isCurrentlyAssigned
+      const userToAssign = users.find((u) => u.id === userId);
+      if (!userToAssign) return;
+
+      const updatedAssignments: TaskAssignment[] = isCurrentlyAssigned
         ? editingTask.taskAssignments.filter((a) => a.user.id !== userId)
         : [
             ...editingTask.taskAssignments,
             {
               id: `temp-${userId}`,
-              user: users.find((u) => u.id === userId)!,
+              user: userToAssign,
               taskId: editingTask.id,
               userId: userId,
             },
@@ -165,6 +179,15 @@ export function TaskManagerProvider({
     [editingTask],
   );
 
+  // Define interface for the API payload
+  interface TaskSaveData {
+    name: string;
+    description: string;
+    status: TaskStatusKey;
+    assignedUserIds: string[];
+    blockedTaskIds: string[];
+  }
+
   // Save a task (new or existing)
   const saveTask = useCallback(
     async (task: ExtendedTask) => {
@@ -178,7 +201,7 @@ export function TaskManagerProvider({
           : `/api/project/${projectId}/tasks/${task.id}`;
 
         // Prepare the data to send
-        const taskData = {
+        const taskData: TaskSaveData = {
           name: task.name,
           description: task.description,
           status: task.status,
@@ -319,13 +342,18 @@ export function TaskManagerProvider({
     setBlockingTaskSearchQuery("");
   }, [editingTask, saveTask]);
 
-  // Update task field in edit mode
+  // Update task field in edit mode with strong typing
   const updateEditingTask = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (field: string, value: any) => {
+    <K extends keyof ExtendedTask>(
+      field: K,
+      value: ExtendedTask[K] | undefined,
+    ) => {
       if (!editingTask) return;
 
-      setEditingTask((prev) => (prev ? { ...prev, [field]: value } : null));
+      setEditingTask((prev) => {
+        if (!prev) return null;
+        return { ...prev, [field]: value };
+      });
 
       // Also update in the tasks array
       setTasks((prevTasks) =>
@@ -337,7 +365,7 @@ export function TaskManagerProvider({
     [editingTask],
   );
 
-  const value = {
+  const value: TaskManagerContextType = {
     tasks,
     editingTask,
     isLoading,
@@ -365,7 +393,7 @@ export function TaskManagerProvider({
   );
 }
 
-export function useTaskManager() {
+export function useTaskManager(): TaskManagerContextType {
   const context = useContext(TaskManagerContext);
   if (context === undefined) {
     throw new Error("useTaskManager must be used within a TaskManagerProvider");

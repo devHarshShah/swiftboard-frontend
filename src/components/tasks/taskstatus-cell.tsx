@@ -41,7 +41,12 @@ export function TaskStatusCell({ task }: { task: ExtendedTask }) {
       <div className="px-2">
         <Select
           value={task.status}
-          onValueChange={(value) => updateEditingTask("status", value)}
+          onValueChange={(value) =>
+            updateEditingTask(
+              "status",
+              value as "TODO" | "IN_PROGRESS" | "DONE",
+            )
+          }
         >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select status" />

@@ -1,11 +1,22 @@
 import React, { useRef, useState } from "react";
-import ReactFlow, { Background, Controls, MiniMap, NodeTypes } from "reactflow";
+import ReactFlow, {
+  Background,
+  Controls,
+  MiniMap,
+  NodeTypes,
+  ReactFlowInstance,
+  Node,
+} from "reactflow";
 import "reactflow/dist/style.css";
 import WorkflowNode from "@/src/components/workflow/workflow-node";
 import { useWorkflowData } from "@/src/hooks/useWorkflowData";
 import { useWorkflowOperations } from "@/src/hooks/useWorkFlowOperations";
 import WorkflowPanel from "./workflow-panel";
 import WorkflowLoading from "./workflow-loading";
+import { WorkflowNodeData } from "@/src/types/workflow";
+
+// Define the type for your workflow nodes
+type WorkflowNode = Node<WorkflowNodeData>;
 
 const nodeTypes: NodeTypes = {
   workflowNode: WorkflowNode,
@@ -13,8 +24,8 @@ const nodeTypes: NodeTypes = {
 
 const WorkflowBuilder: React.FC = () => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+  const [reactFlowInstance, setReactFlowInstance] =
+    useState<ReactFlowInstance | null>(null);
 
   const {
     nodes,
@@ -32,11 +43,7 @@ const WorkflowBuilder: React.FC = () => {
   const {
     onConnect,
     onAddNode,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    selectedElements,
     onSelectionChange,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    deleteSelectedElements,
     handleDraft,
     updateDraft,
     publishWorkflow,

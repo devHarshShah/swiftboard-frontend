@@ -1,21 +1,35 @@
 import { useCallback, useState } from "react";
-import { Node, Edge, Connection, addEdge } from "reactflow";
+import {
+  Node,
+  Edge,
+  Connection,
+  addEdge,
+  ReactFlowInstance,
+  OnSelectionChangeParams,
+} from "reactflow";
 import { v4 as uuidv4 } from "uuid";
 import { apiClient } from "@/src/lib/apiClient";
 import { useAppContext } from "@/src/contexts/app-context";
 import { transformWorkflowData } from "@/src/lib/transformNode";
-import { nodeTemplates } from "@/src/types";
-import { WorkflowNodeData } from "@/src/types";
+import { nodeTemplates, WorkflowNodeData, NodeType } from "@/src/types";
 
 interface UseWorkflowOperationsProps {
   nodes: Node<WorkflowNodeData>[];
   edges: Edge[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  reactFlowInstance: any;
+  reactFlowInstance: ReactFlowInstance | null;
   name: string;
   setNodes: React.Dispatch<React.SetStateAction<Node<WorkflowNodeData>[]>>;
   setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
   workflowFetched: boolean;
+}
+
+interface ApiResponse {
+  id: string;
+  name: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  [key: string]: unknown;
 }
 
 export function useWorkflowOperations({
@@ -29,7 +43,7 @@ export function useWorkflowOperations({
   workflowFetched,
 }: UseWorkflowOperationsProps) {
   const [selectedElements, setSelectedElements] = useState<{
-    nodes: Node[];
+    nodes: Node<WorkflowNodeData>[];
     edges: Edge[];
   }>({ nodes: [], edges: [] });
 
@@ -54,7 +68,7 @@ export function useWorkflowOperations({
 
   // Add a new node based on template - UPDATED IMPLEMENTATION
   const onAddNode = useCallback(
-    (template: (typeof nodeTemplates)[0]) => {
+    (template: (typeof nodeTemplates)[number]) => {
       if (!reactFlowInstance) return;
 
       const position = reactFlowInstance.project({
@@ -68,8 +82,7 @@ export function useWorkflowOperations({
         position,
         data: {
           label: template.label,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          type: template.type as any,
+          type: template.type as NodeType,
           description: template.description,
           icon: template.icon,
           config: {},
@@ -83,12 +96,13 @@ export function useWorkflowOperations({
   );
 
   // Track selected elements
-  const onSelectionChange = useCallback(
-    ({ nodes, edges }: { nodes: Node[]; edges: Edge[] }) => {
-      setSelectedElements({ nodes, edges });
-    },
-    [],
-  );
+  const onSelectionChange = useCallback((params: OnSelectionChangeParams) => {
+    const selectedNodes = params.nodes as Node<WorkflowNodeData>[];
+    setSelectedElements({
+      nodes: selectedNodes,
+      edges: params.edges,
+    });
+  }, []);
 
   // Delete selected elements
   const deleteSelectedElements = useCallback(() => {
@@ -111,7 +125,7 @@ export function useWorkflowOperations({
   }, [selectedElements, setNodes, setEdges]);
 
   // Save as draft
-  const handleDraft = async () => {
+  const handleDraft = async (): Promise<ApiResponse | void> => {
     try {
       if (!projectId) return;
 
@@ -136,15 +150,16 @@ export function useWorkflowOperations({
         throw new Error("Failed to save workflow");
       }
 
-      const data = await response.json();
+      const data: ApiResponse = await response.json();
       console.log("Workflow saved:", data);
+      return data;
     } catch (error) {
       console.error("Error saving workflow:", error);
     }
   };
 
   // Update existing draft
-  const updateDraft = async () => {
+  const updateDraft = async (): Promise<ApiResponse | void> => {
     try {
       if (!projectId) return;
 
@@ -169,15 +184,16 @@ export function useWorkflowOperations({
         throw new Error("Failed to update workflow");
       }
 
-      const data = await response.json();
+      const data: ApiResponse = await response.json();
       console.log("Workflow updated:", data);
+      return data;
     } catch (error) {
       console.error("Error updating workflow:", error);
     }
   };
 
   // Publish workflow
-  const publishWorkflow = async () => {
+  const publishWorkflow = async (): Promise<ApiResponse | void> => {
     try {
       if (!projectId) return;
 
@@ -202,8 +218,9 @@ export function useWorkflowOperations({
         throw new Error("Failed to publish workflow");
       }
 
-      const data = await response.json();
+      const data: ApiResponse = await response.json();
       console.log("Workflow published:", data);
+      return data;
     } catch (error) {
       console.error("Error publishing workflow:", error);
     }

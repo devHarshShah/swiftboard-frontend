@@ -39,7 +39,9 @@ export function TaskDueDateCell({ task }: { task: ExtendedTask }) {
             <Calendar
               mode="single"
               selected={task.dueDate ? new Date(task.dueDate) : undefined}
-              onSelect={(date) => updateEditingTask("dueDate", date)}
+              onSelect={(date) =>
+                updateEditingTask("dueDate", date ? new Date(date) : undefined)
+              }
               initialFocus
             />
           </PopoverContent>
