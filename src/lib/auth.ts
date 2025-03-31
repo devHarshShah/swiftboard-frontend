@@ -38,17 +38,10 @@ export const getAccessToken = (): string | null => {
 // Refresh tokens function
 export const refreshTokens = async (): Promise<TokenResponse | null> => {
   try {
-    const cookies = nookies.get();
-    const refreshToken = cookies.refresh_token;
-    console.log("refreshToken", refreshToken);
-    if (!refreshToken) throw new Error("No refresh token available");
-
+    // Remove the cookie access attempt - the API route will handle this
     const response = await fetch("/api/auth/refresh", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${refreshToken}`,
-        "Content-Type": "application/json",
-      },
+      credentials: "include", // Important for sending cookies
     });
 
     if (!response.ok) throw new Error("Failed to refresh token");
