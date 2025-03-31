@@ -1,40 +1,95 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(request: Request) {
-  const { email, password } = await request.json();
+export async function POST(request: NextRequest) {
+  try {
+    // Parse request body
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid request format" },
+        { status: 400 },
+      );
+    }
 
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/login`,
-    {
+    const { email, password } = body;
+
+    // Validate required fields
+    if (!email) {
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    }
+
+    if (!password) {
+      return NextResponse.json(
+        { error: "Password is required" },
+        { status: 400 },
+      );
+    }
+
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!apiBaseUrl) {
+      console.error("API base URL is not defined");
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 },
+      );
+    }
+
+    const response = await fetch(`${apiBaseUrl}/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ email, password }),
-    },
-  );
+    });
 
-  const data = await response.json();
+    // Handle non-JSON responses
+    let data;
+    try {
+      data = await response.json();
+    } catch (e) {
+      console.error("Error parsing response:", e);
+      return NextResponse.json(
+        { error: "Invalid response from server" },
+        { status: 500 },
+      );
+    }
 
-  if (!response.ok) {
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.message || "Login failed" },
+        { status: response.status },
+      );
+    }
+
+    const res = NextResponse.json(data);
+
+    // Set cookies with proper expiration times
+    res.cookies.set("access_token", data.accessToken, {
+      maxAge: 15 * 60, // 15 minutes
+      path: "/",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    res.cookies.set("refresh_token", data.refreshToken, {
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+      path: "/",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    return res;
+  } catch (error) {
+    console.error("Login error:", error);
+    const message =
+      error instanceof Error ? error.message : "Unknown error occurred";
     return NextResponse.json(
-      { error: data.message },
-      { status: response.status },
+      { error: "Authentication failed", details: message },
+      { status: 500 },
     );
   }
-
-  const res = NextResponse.json(data);
-
-  // Set cookies
-  res.cookies.set("access_token", data.accessToken, {
-    maxAge: 15 * 60, // 30 days
-    path: "/",
-  });
-
-  res.cookies.set("refresh_token", data.refreshToken, {
-    maxAge: 7 * 24 * 60 * 60, // 30 days
-    path: "/",
-  });
-
-  return res;
 }

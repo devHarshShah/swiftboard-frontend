@@ -9,7 +9,7 @@ export async function GET(
 
     if (!attachmentId) {
       return NextResponse.json(
-        { message: "Attachment ID is required" },
+        { error: "Attachment ID is required" },
         { status: 400 },
       );
     }
@@ -18,7 +18,7 @@ export async function GET(
 
     if (!token) {
       return NextResponse.json(
-        { message: "Authentication required" },
+        { error: "Authentication required" },
         { status: 401 },
       );
     }
@@ -26,6 +26,14 @@ export async function GET(
     // Get backend URL from environment variables
     const backendUrl =
       process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+    if (!backendUrl) {
+      console.error("API URL is not defined");
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 },
+      );
+    }
 
     console.log(
       `Fetching attachment from ${backendUrl}/chat/attachments/${attachmentId}`,
@@ -42,24 +50,45 @@ export async function GET(
       },
     );
 
+    // Handle different response types
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Backend attachment error:", errorText);
+      let errorMessage;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || response.statusText;
+      } catch {
+        // If the response isn't JSON
+        const errorText = await response.text();
+        console.error("Backend attachment error:", errorText);
+        errorMessage = response.statusText;
+      }
 
       return NextResponse.json(
-        { message: `Failed to get attachment URL: ${response.statusText}` },
+        { error: `Failed to get attachment URL: ${errorMessage}` },
         { status: response.status },
       );
     }
 
-    const data = await response.json();
+    // Handle potential non-JSON responses
+    let data;
+    try {
+      data = await response.json();
+    } catch (e) {
+      console.error("Error parsing attachment response:", e);
+      return NextResponse.json(
+        { error: "Invalid response format from server" },
+        { status: 500 },
+      );
+    }
+
     return NextResponse.json(data);
   } catch (error) {
     console.error("Attachment URL fetch error:", error);
+    const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
       {
-        message: "Failed to get attachment URL",
-        error: error instanceof Error ? error.message : String(error),
+        error: "Failed to get attachment URL",
+        details: message,
       },
       { status: 500 },
     );

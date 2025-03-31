@@ -4,37 +4,50 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ teamId: string }> },
 ) {
-  const { teamId } = await params; // Await params to extract teamId
+  try {
+    const { teamId } = await params; // Await params to extract teamId
 
-  if (!teamId) {
-    return NextResponse.json({ error: "Team ID is required" }, { status: 400 });
-  }
+    if (!teamId) {
+      return NextResponse.json(
+        { error: "Team ID is required" },
+        { status: 400 },
+      );
+    }
 
-  const accessToken = request.cookies.get("access_token")?.value;
+    const accessToken = request.cookies.get("access_token")?.value;
 
-  if (!accessToken) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+    if (!accessToken) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL}/teams/${teamId}/projects`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/teams/${teamId}/projects`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
       },
-    },
-  );
+    );
 
-  const data = await response.json();
+    const data = await response.json();
 
-  if (!response.ok) {
+    if (!response.ok) {
+      console.error("API error:", response.status, data);
+      return NextResponse.json(
+        { error: data.message || "Failed to fetch team projects" },
+        { status: response.status },
+      );
+    }
+
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error("Error fetching team projects:", error);
+    const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: data.message },
-      { status: response.status },
+      { error: "Failed to fetch team projects", details: message },
+      { status: 500 },
     );
   }
-
-  return NextResponse.json(data);
 }

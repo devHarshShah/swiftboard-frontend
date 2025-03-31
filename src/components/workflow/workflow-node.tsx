@@ -18,9 +18,6 @@ import {
   Lock,
 } from "lucide-react";
 import { UserSelector } from "./user-selector";
-import { apiClient } from "../../lib/apiClient";
-import { useAppContext } from "../../contexts/app-context";
-import { TeamMemberResponse } from "@/src/types";
 
 // Define interfaces for the component's local state
 interface LocalWorkflowData {
@@ -45,41 +42,20 @@ declare global {
   }
 }
 
-const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
+// Update component props to include team members
+interface WorkflowNodeProps extends NodeProps<WorkflowNodeData> {
+  teamMembers?: User[];
+}
+
+const WorkflowNode: React.FC<WorkflowNodeProps> = ({
   data,
   selected,
   id,
+  teamMembers = [],
 }) => {
   const [showConfig, setShowConfig] = useState(false);
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const { getNode, getEdges } = useReactFlow();
-  const [users, setUsers] = useState<User[]>([]);
-  const { activeTeam } = useAppContext();
-  const teamId = activeTeam?.id;
-
-  const fetchUsers = useCallback(async () => {
-    if (!teamId) return;
-
-    try {
-      const response = await apiClient(`/api/teams/${teamId}/members`);
-      const userData = (await response.json()) as TeamMemberResponse[];
-      // Map team member response to users
-      const fetchedUsers = userData.map(
-        (member: TeamMemberResponse) =>
-          ({
-            ...member.user,
-            name: member.user.name || "", // Ensure name is never undefined
-          }) as User,
-      );
-      setUsers(fetchedUsers);
-    } catch (error) {
-      console.error("Failed to fetch users", error);
-    }
-  }, [teamId]);
-
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
 
   const [localData, setLocalData] = useState<LocalWorkflowData>({
     label: data.label,
@@ -220,7 +196,7 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
   const getSelectedUsers = (): User[] => {
     const selectedUserIds = localData.userIds || [];
     return selectedUserIds
-      .map((userId) => users.find((user) => user.id === userId))
+      .map((userId) => teamMembers.find((user) => user.id === userId))
       .filter((user): user is User => Boolean(user));
   };
 
@@ -435,7 +411,7 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({
                       Assign Users
                     </label>
                     <UserSelector
-                      users={users}
+                      users={teamMembers}
                       selectedUsers={getSelectedUsers()}
                       onToggleUser={handleUserToggle}
                       searchQuery={userSearchQuery}

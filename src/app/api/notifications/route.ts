@@ -17,18 +17,32 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    if (!response.ok) {
+    // Handle potential non-JSON responses
+    let data;
+    try {
+      data = await response.json();
+    } catch (e) {
+      console.error("Error parsing notifications response:", e);
       return NextResponse.json(
-        { error: "Failed to fetch notifications" },
+        { error: "Invalid response from notifications server" },
+        { status: 500 },
+      );
+    }
+
+    if (!response.ok) {
+      console.error("Notifications API error:", response.status, data);
+      return NextResponse.json(
+        { error: data.message || "Failed to fetch notifications" },
         { status: response.status },
       );
     }
 
-    const data = await response.json();
     return NextResponse.json(data);
-  } catch {
+  } catch (error) {
+    console.error("Error fetching notifications:", error);
+    const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: "Failed to fetch notifications" },
+      { error: "Failed to fetch notifications", details: message },
       { status: 500 },
     );
   }

@@ -6,7 +6,27 @@ export async function GET(
 ) {
   try {
     const accessToken = request.cookies.get("access_token")?.value;
-    const { userId, receiverId } = await params;
+
+    if (!accessToken) {
+      return NextResponse.json(
+        { error: "Authentication token is missing" },
+        { status: 401 },
+      );
+    }
+
+    // Safely await and extract params
+    let userId, receiverId;
+    try {
+      const resolvedParams = await params;
+      userId = resolvedParams.userId;
+      receiverId = resolvedParams.receiverId;
+    } catch (error) {
+      console.error("Error extracting route parameters:", error);
+      return NextResponse.json(
+        { error: "Invalid request parameters" },
+        { status: 400 },
+      );
+    }
 
     // Make sure both IDs are provided
     if (!userId || !receiverId) {
@@ -16,8 +36,9 @@ export async function GET(
       );
     }
 
-    // Call the backend API
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+    // Call the backend API
     const response = await fetch(
       `${baseUrl}/chat/messages?userId1=${userId}&userId2=${receiverId}`,
       {
@@ -29,11 +50,18 @@ export async function GET(
       },
     );
 
-    // Handle error responses from the backend
+    // Check for non-200 responses
     if (!response.ok) {
-      const errorData = await response.json();
+      let errorMessage = `Failed to fetch messages: ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch {
+        // If parsing JSON fails, use the default error message
+      }
+
       return NextResponse.json(
-        { error: errorData.message || "Failed to fetch messages" },
+        { error: errorMessage },
         { status: response.status },
       );
     }
@@ -43,8 +71,10 @@ export async function GET(
     return NextResponse.json(messages);
   } catch (error) {
     console.error("Error fetching messages:", error);
+    const message =
+      error instanceof Error ? error.message : "Unknown error occurred";
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Failed to retrieve messages", details: message },
       { status: 500 },
     );
   }

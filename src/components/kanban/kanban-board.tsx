@@ -60,8 +60,8 @@ const KanbanBoard: React.FC = () => {
   // Render loading state if data is being fetched
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+      <div className="flex items-center justify-center h-[calc(100vh-80px)]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
       </div>
     );
   }
