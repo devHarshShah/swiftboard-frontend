@@ -126,6 +126,7 @@ export default function SignupForm() {
           email: formData.email,
           name: formData.name,
           password: formData.password,
+          confirmPassword: formData.confirmPassword,
           marketingOptIn,
         }),
       });

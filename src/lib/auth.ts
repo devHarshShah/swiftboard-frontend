@@ -2,12 +2,15 @@ import { jwtDecode } from "jwt-decode";
 import nookies from "nookies";
 
 interface TokenPayload {
+  sub: string;
+  email: string;
   exp: number;
+  iat: number;
 }
 
 interface TokenResponse {
-  access_token: string;
-  refresh_token: string;
+  accessToken: string;
+  refreshToken: string;
 }
 
 export const isTokenExpired = (token: string): boolean => {
@@ -29,6 +32,20 @@ export const getAccessToken = (): string | null => {
   return accessToken;
 };
 
+export const getUserFromToken = (
+  token: string,
+): { userId: string; email: string } | null => {
+  try {
+    const decoded = jwtDecode<TokenPayload>(token);
+    return {
+      userId: decoded.sub,
+      email: decoded.email,
+    };
+  } catch {
+    return null;
+  }
+};
+
 export const refreshTokens = async (): Promise<TokenResponse | null> => {
   try {
     const response = await fetch("/api/auth/refresh", {
@@ -38,12 +55,14 @@ export const refreshTokens = async (): Promise<TokenResponse | null> => {
 
     if (!response.ok) throw new Error("Failed to refresh token");
 
-    const data: TokenResponse = await response.json();
+    const data = await response.json();
 
-    return data;
+    return {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+    };
   } catch (error) {
     console.error("Token refresh failed:", error);
-
     return null;
   }
 };
@@ -52,6 +71,7 @@ export const logout = async (): Promise<void> => {
   try {
     await fetch("/api/auth/logout", {
       method: "POST",
+      credentials: "include",
     });
   } catch (error) {
     console.error("Logout error:", error);

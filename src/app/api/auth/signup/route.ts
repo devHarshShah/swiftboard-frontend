@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import nookies from "nookies";
 
 export async function POST(request: Request) {
   try {
@@ -62,7 +61,7 @@ export async function POST(request: Request) {
 
     const res = NextResponse.json(data);
 
-    nookies.set({ res }, "access_token", data.accessToken, {
+    res.cookies.set("access_token", data.tokens.accessToken, {
       maxAge: 15 * 60,
       path: "/",
       httpOnly: true,
@@ -70,7 +69,7 @@ export async function POST(request: Request) {
       sameSite: "strict",
     });
 
-    nookies.set({ res }, "refresh_token", data.refreshToken, {
+    res.cookies.set("refresh_token", data.tokens.refreshToken, {
       maxAge: 7 * 24 * 60 * 60,
       path: "/",
       httpOnly: true,

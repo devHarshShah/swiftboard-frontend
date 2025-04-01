@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     backendFormData.append("receiverId", receiverId.toString());
 
     const backendUrl =
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
     console.log(`Sending file upload to ${backendUrl}/chat/upload`);
     console.log(backendFormData);

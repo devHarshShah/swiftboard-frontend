@@ -30,7 +30,7 @@ async function handleRequest(
     backendPath += `?${searchParams}`;
   }
 
-  const backendUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}${backendPath}`;
+  const backendUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"}${backendPath}`;
 
   try {
     const backendRes = await fetch(backendUrl, {

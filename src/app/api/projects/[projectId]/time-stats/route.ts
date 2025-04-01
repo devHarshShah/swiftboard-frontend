@@ -15,7 +15,7 @@ export async function GET(
 
   const { projectId } = await params;
 
-  const backendUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/projects/${projectId}/tasks/time-stats`;
+  const backendUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"}/projects/${projectId}/tasks/time-stats`;
 
   try {
     const backendRes = await fetch(backendUrl, {
