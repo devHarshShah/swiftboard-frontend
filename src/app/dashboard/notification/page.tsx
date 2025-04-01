@@ -31,10 +31,8 @@ export default function NotificationsPage() {
   const userId = user?.id;
   const { showToast } = useToast();
 
-  // Process notifications to normalize types and add computed properties
   const processNotification = useCallback(
     (notification: Notification): ProcessedNotification => {
-      // Function to calculate time ago
       const getTimeAgo = (date: Date): string => {
         const now = new Date();
         const secondsAgo = Math.floor((now.getTime() - date.getTime()) / 1000);
@@ -99,7 +97,6 @@ export default function NotificationsPage() {
     return (groupedNotifications[type] || []).filter((n) => !n.read).length;
   };
 
-  // Fetch notifications
   useEffect(() => {
     const fetchNotifications = async () => {
       setLoading(true);
@@ -107,9 +104,7 @@ export default function NotificationsPage() {
         const response = await apiClient("/api/notifications");
         const data = await response.json();
 
-        // Process data
         const processedData = data.map((n: Notification) => {
-          // Apply defaults if missing
           const rawType =
             n.type ||
             Object.values(NOTIFICATION_TYPES)[
@@ -158,14 +153,13 @@ export default function NotificationsPage() {
     fetchNotifications();
   }, [processNotification, showToast]);
 
-  // Socket connection for real-time notifications
   useEffect(() => {
     if (!userId || !isNotificationConnected || !notificationSocket) return;
 
     notificationSocket.on("notification", (notification: Notification) => {
       const processedNotification = processNotification({
         ...notification,
-        // Apply defaults if missing
+
         type:
           notification.type ||
           Object.values(NOTIFICATION_TYPES)[
@@ -189,7 +183,6 @@ export default function NotificationsPage() {
 
       setNotifications((prev) => [processedNotification, ...prev]);
 
-      // Show toast notification
       showToast({
         variant: "default",
         title: "New Notification",
@@ -281,14 +274,12 @@ export default function NotificationsPage() {
   const filterNotifications = (notifications: ProcessedNotification[]) => {
     let filtered = [...notifications];
 
-    // Filter by read/unread status
     if (filter === "unread") {
       filtered = filtered.filter((n) => !n.read);
     } else if (filter === "read") {
       filtered = filtered.filter((n) => n.read);
     }
 
-    // Filter by time
     if (timeFilter === "today") {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -306,7 +297,6 @@ export default function NotificationsPage() {
     return filtered;
   };
 
-  // Get notification categories for sidebar
   const categories = Object.keys(groupedNotifications).sort();
 
   return (

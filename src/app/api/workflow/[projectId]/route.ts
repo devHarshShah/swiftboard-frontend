@@ -68,7 +68,6 @@ export async function POST(
         body: JSON.stringify(workflowData),
       });
 
-      // Handle different response types
       if (!response.ok) {
         let errorData;
         try {
@@ -149,7 +148,6 @@ export async function GET(
         },
       });
 
-      // Handle different response types
       if (!response.ok) {
         let errorData;
         try {
@@ -266,7 +264,6 @@ export async function PUT(
         body: JSON.stringify(workflowData),
       });
 
-      // Handle different response types
       if (!response.ok) {
         let errorData;
         try {

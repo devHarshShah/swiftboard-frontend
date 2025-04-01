@@ -36,7 +36,7 @@ export function MessageBubble({
           message.type === "user" ? "flex-row-reverse" : "flex-row",
         )}
       >
-        {/* Only show avatar for first message in group */}
+        {}
         {isFirstInGroup && (
           <div
             className={cn(
@@ -62,7 +62,7 @@ export function MessageBubble({
             </Avatar>
           </div>
         )}
-        {/* Spacer for non-first messages in group */}
+        {}
         {!isFirstInGroup && (
           <div
             className={cn(
@@ -82,14 +82,14 @@ export function MessageBubble({
               : "bg-muted border border-border/50",
           )}
         >
-          {/* Message text content */}
+          {}
           {message.content && (
             <div className="text-sm whitespace-pre-wrap break-words">
               {message.content}
             </div>
           )}
 
-          {/* Attachments */}
+          {}
           {message.attachments && message.attachments.length > 0 && (
             <div className="mt-2 space-y-2">
               {message.attachments.map((attachment) => (
@@ -103,7 +103,7 @@ export function MessageBubble({
             </div>
           )}
 
-          {/* Only show timestamp for last message in group */}
+          {}
           {isLastInGroup && (
             <div className="flex items-center mt-1 text-[10px] opacity-70 justify-end gap-1">
               <span>

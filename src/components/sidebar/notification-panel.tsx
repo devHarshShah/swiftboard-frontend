@@ -19,12 +19,12 @@ export function NotificationPanel() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [socket, setSocket] = useState<typeof Socket | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [open, setOpen] = useState(false);
   const { user } = useAppContext();
   const userId = user?.id;
 
-  // Fetch initial notifications
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
@@ -40,7 +40,6 @@ export function NotificationPanel() {
     fetchNotifications();
   }, []);
 
-  // Socket connection setup
   useEffect(() => {
     if (!userId) return;
 
@@ -64,10 +63,8 @@ export function NotificationPanel() {
     };
   }, []);
 
-  // Handle opening popover
   useEffect(() => {
     if (open && socket && unreadCount > 0) {
-      // Emit read event for all unread notifications
       notifications
         .filter((n) => !n.read)
         .forEach((n) => {
@@ -78,7 +75,6 @@ export function NotificationPanel() {
 
   const markAllAsRead = () => {
     if (socket) {
-      // Emit read event for all unread notifications
       notifications
         .filter((n) => !n.read)
         .forEach((n) => {
@@ -140,9 +136,7 @@ export function NotificationPanel() {
                     <Bell className="h-4 w-4 text-primary" />
                   </Avatar>
                   <div className="space-y-1">
-                    {/* <p className="text-sm font-medium leading-none">
-                      {notification.title}
-                    </p> */}
+                    {}
                     <p className="text-sm text-muted-foreground">
                       {notification.message}
                     </p>

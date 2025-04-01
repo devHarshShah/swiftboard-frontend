@@ -19,7 +19,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/dashboard/:path*", // Match all dashboard routes
-  ],
+  matcher: ["/dashboard/:path*"],
 };

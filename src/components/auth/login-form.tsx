@@ -69,7 +69,7 @@ export default function LoginForm() {
       <div className="flex flex-col h-screen w-full overflow-hidden bg-background dark:bg-dark-900">
         <Navbar />
         <div className="flex flex-1 w-full rounded-lg py-8 px-12">
-          {/* Left side with login form */}
+          {}
           <div className="w-full flex flex-col justify-center items-center lg:w-1/2">
             <div className="w-2/3 mx-auto rounded-lg p-8">
               <div className="flex justify-between items-center mb-8">
@@ -215,7 +215,7 @@ export default function LoginForm() {
               </p>
             </div>
 
-            {/* Additional elements below the form */}
+            {}
             <div className="mt-8 w-2/3 text-center">
               <div className="flex justify-center space-x-6 text-sm text-muted-foreground">
                 <Link href="/help" className="hover:text-foreground">
@@ -237,7 +237,7 @@ export default function LoginForm() {
             </div>
           </div>
 
-          {/* Right side with professional features section */}
+          {}
           <div className="hidden lg:block w-1/2">
             <div className="h-full flex flex-col p-8 bg-gradient-to-br from-blue-800 to-indigo-900 text-white rounded-xl">
               <div className="mb-6">

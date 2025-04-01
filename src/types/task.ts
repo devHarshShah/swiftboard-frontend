@@ -1,7 +1,6 @@
 import { User } from "./user";
 import { BaseEntity } from "./common";
 
-// Task-related constants and types
 export const TaskStatus = {
   TODO: "TODO",
   IN_PROGRESS: "IN_PROGRESS",
@@ -74,13 +73,11 @@ export const TASK_STATUS_OPTIONS = [
   { value: "DONE", label: "Done" },
 ];
 
-// Extended interface for additional task-related data
 export interface ExtendedTask extends Task {
   assignedUsers?: string[];
   isNew?: boolean;
 }
 
-// Component prop types
 export interface TaskColumnProps {
   status: TaskStatusKey;
   tasks: Task[];

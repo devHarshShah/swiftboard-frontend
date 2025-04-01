@@ -17,7 +17,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // The backend expects the refresh token in the Authorization header as Bearer token
     const response = await fetch(`${apiBaseUrl}/auth/refresh`, {
       method: "POST",
       headers: {
@@ -26,7 +25,6 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Handle non-JSON responses
     let data;
     try {
       data = await response.json();
@@ -51,9 +49,8 @@ export async function POST(request: NextRequest) {
       refresh_token: data.refreshToken,
     });
 
-    // Set the new access_token in cookies
     res.cookies.set("access_token", data.accessToken, {
-      maxAge: 15 * 60, // 15 minutes
+      maxAge: 15 * 60,
       path: "/",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -61,7 +58,7 @@ export async function POST(request: NextRequest) {
     });
 
     res.cookies.set("refresh_token", data.refreshToken, {
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+      maxAge: 7 * 24 * 60 * 60,
       path: "/",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",

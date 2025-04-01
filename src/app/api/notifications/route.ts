@@ -17,7 +17,6 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Handle potential non-JSON responses
     let data;
     try {
       data = await response.json();

@@ -42,39 +42,9 @@ const data = {
           title: "Task Lists",
           url: "/dashboard/tasklist",
         },
-        // {
-        //   title: "Dependencies & Subtasks",
-        //   url: "#",
-        // },
-        // {
-        //   title: "Templates",
-        //   url: "#",
-        // },
       ],
     },
-    // {
-    //   title: "Time Tracking",
-    //   url: "#",
-    //   icon: Clock,
-    //   items: [
-    //     {
-    //       title: "Timer",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Reports",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Time Suggestions",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Timesheets",
-    //       url: "#",
-    //     },
-    //   ],
-    // },
+
     {
       title: "Collaboration",
       url: "#",
@@ -84,62 +54,9 @@ const data = {
           title: "Chat",
           url: "/dashboard/chat",
         },
-        // {
-        //   title: "Comments",
-        //   url: "#",
-        // },
-        // {
-        //   title: "Mentions",
-        //   url: "#",
-        // },
-        // {
-        //   title: "Calls",
-        //   url: "#",
-        // },
       ],
     },
-    // {
-    //   title: "Resource Management",
-    //   url: "#",
-    //   icon: UsersRound,
-    //   items: [
-    //     {
-    //       title: "Workload Balancing",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Skill Assignments",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Availability",
-    //       url: "#",
-    //     },
-    //   ],
-    // },
-    // {
-    //   title: "Dashboards & Analytics",
-    //   url: "#",
-    //   icon: Gauge,
-    //   items: [
-    //     {
-    //       title: "Project KPIs",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Burn Charts",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Predictive Analytics",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Custom Reports",
-    //       url: "#",
-    //     },
-    //   ],
-    // },
+
     {
       title: "Automations & Integrations",
       url: "#",
@@ -228,7 +145,7 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        {/* <NavProjects projects={data.projects} /> */}
+        {}
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

@@ -17,8 +17,6 @@ export function MessageInput({
   input,
   isUploading,
   showEmojiPicker,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  setInput,
   handleInputChange,
   handleSendMessage,
   handleFileInput,
@@ -93,7 +91,7 @@ export function MessageInput({
           </Button>
         </div>
 
-        {/* Emoji picker */}
+        {}
         <AnimatePresence>
           {showEmojiPicker && <EmojiPicker onEmojiSelect={handleEmojiSelect} />}
         </AnimatePresence>

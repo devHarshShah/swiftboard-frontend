@@ -14,7 +14,6 @@ export async function GET(
       );
     }
 
-    // Safely await and extract params
     let userId, receiverId;
     try {
       const resolvedParams = await params;
@@ -28,7 +27,6 @@ export async function GET(
       );
     }
 
-    // Make sure both IDs are provided
     if (!userId || !receiverId) {
       return NextResponse.json(
         { error: "User ID and Receiver ID are required" },
@@ -38,7 +36,6 @@ export async function GET(
 
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-    // Call the backend API
     const response = await fetch(
       `${baseUrl}/chat/messages?userId1=${userId}&userId2=${receiverId}`,
       {
@@ -50,15 +47,12 @@ export async function GET(
       },
     );
 
-    // Check for non-200 responses
     if (!response.ok) {
       let errorMessage = `Failed to fetch messages: ${response.statusText}`;
       try {
         const errorData = await response.json();
         errorMessage = errorData.message || errorMessage;
-      } catch {
-        // If parsing JSON fails, use the default error message
-      }
+      } catch {}
 
       return NextResponse.json(
         { error: errorMessage },
@@ -66,7 +60,6 @@ export async function GET(
       );
     }
 
-    // Return the messages
     const messages = await response.json();
     return NextResponse.json(messages);
   } catch (error) {

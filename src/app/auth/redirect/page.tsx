@@ -12,17 +12,15 @@ const RedirectPage = () => {
 
   useEffect(() => {
     if (accessToken && refreshToken) {
-      // Set cookies
       nookies.set(null, "access_token", accessToken as string, {
-        maxAge: 30 * 24 * 60 * 60, // 30 days
+        maxAge: 30 * 24 * 60 * 60,
         path: "/",
       });
       nookies.set(null, "refresh_token", refreshToken as string, {
-        maxAge: 30 * 24 * 60 * 60, // 30 days
+        maxAge: 30 * 24 * 60 * 60,
         path: "/",
       });
 
-      // Redirect to the dashboard or another page
       router.push("/dashboard");
     }
   }, [accessToken, refreshToken, router]);

@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import { UserSelector } from "./user-selector";
 
-// Define interfaces for the component's local state
 interface LocalWorkflowData {
   label: string;
   description: string;
@@ -29,20 +28,17 @@ interface LocalWorkflowData {
   blocking: Task[];
 }
 
-// Custom event for node configuration updates
 interface NodeConfigUpdateEvent {
   nodeId: string;
   updatedData: WorkflowNodeData;
 }
 
-// Declare the custom event
 declare global {
   interface WindowEventMap {
     nodeConfigUpdate: CustomEvent<NodeConfigUpdateEvent>;
   }
 }
 
-// Update component props to include team members
 interface WorkflowNodeProps extends NodeProps<WorkflowNodeData> {
   teamMembers?: User[];
 }
@@ -71,7 +67,6 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
     blocking: Array.isArray(data.config?.blocking) ? data.config.blocking : [],
   });
 
-  // Handle input changes
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
@@ -82,12 +77,10 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
     }));
   };
 
-  // Check for upstream and downstream task nodes
   useEffect(() => {
     if (data.type === "task") {
       const edges = getEdges();
 
-      // Find nodes that this task is blocked by (incoming edges)
       const incomingEdges = edges.filter((edge) => edge.target === id);
       const blockedByNodes = incomingEdges
         .map((edge) => {
@@ -97,14 +90,13 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
               id: sourceNode.id,
               name: sourceNode.data.label,
               description: sourceNode.data.description,
-              status: "TODO", // Default status for task relationships
+              status: "TODO",
             } as Task;
           }
           return null;
         })
         .filter((node): node is Task => node !== null);
 
-      // Find nodes that this task is blocking (outgoing edges)
       const outgoingEdges = edges.filter((edge) => edge.source === id);
       const blockingNodes = outgoingEdges
         .map((edge) => {
@@ -114,17 +106,15 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
               id: targetNode.id,
               name: targetNode.data.label,
               description: targetNode.data.description,
-              status: "TODO", // Default status for task relationships
+              status: "TODO",
             } as Task;
           }
           return null;
         })
         .filter((node): node is Task => node !== null);
 
-      // Update local data with blocked by nodes
       if (blockedByNodes.length > 0 || blockingNodes.length > 0) {
         setLocalData((prev) => {
-          // Handle blockedBy relationship
           const existingBlockedByIds: string[] = prev.blockedBy.map(
             (task: Task) => task.id,
           );
@@ -135,7 +125,6 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
             ),
           ];
 
-          // Handle blocking relationship
           const existingBlockingIds: string[] = prev.blocking
             ? prev.blocking.map((task: Task) => task.id)
             : [];
@@ -268,7 +257,6 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
     }
   };
 
-  // Display assigned users badge if task node has assignments
   const hasAssignments =
     data.type === "task" &&
     ((data.config?.userIds &&
@@ -276,7 +264,6 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
       data.config.userIds.length > 0) ||
       (localData.userIds && localData.userIds.length > 0));
 
-  // Display blocked by badge if task node has dependencies
   const hasBlockers =
     data.type === "task" &&
     ((data.config?.blockedBy &&
@@ -284,7 +271,6 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
       data.config.blockedBy.length > 0) ||
       (localData.blockedBy && localData.blockedBy.length > 0));
 
-  // Display blocking badge if task node is blocking other tasks
   const isBlocking =
     data.type === "task" &&
     ((data.config?.blocking &&
@@ -403,7 +389,7 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
                 </div>
               )}
 
-              {/* Task assignment for task nodes */}
+              {}
               {data.type === "task" && (
                 <>
                   <div>

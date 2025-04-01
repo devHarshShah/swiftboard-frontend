@@ -5,7 +5,6 @@ export async function GET(
   { params }: { params: Promise<{ projectId: string }> },
 ) {
   try {
-    // Await the params Promise
     const { projectId } = await params;
 
     if (!projectId) {
@@ -38,7 +37,6 @@ export async function GET(
       },
     });
 
-    // Handle potential non-JSON responses
     let data;
     try {
       data = await response.json();

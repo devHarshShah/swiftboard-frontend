@@ -22,7 +22,6 @@ export function ChatMessages({
 }: ChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to bottom whenever messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping, isUploading]);
@@ -67,7 +66,6 @@ export function ChatMessages({
               </div>
 
               {dateMessages.map((message, index) => {
-                // Determine if this message is part of a group
                 const prevMessage = index > 0 ? dateMessages[index - 1] : null;
                 const nextMessage =
                   index < dateMessages.length - 1
@@ -96,12 +94,12 @@ export function ChatMessages({
         </div>
       )}
 
-      {/* Typing indicator */}
+      {}
       <AnimatePresence>
         {isTyping && <TypingIndicator user={user} />}
       </AnimatePresence>
 
-      {/* File upload progress indicator */}
+      {}
       <AnimatePresence>{isUploading && <UploadIndicator />}</AnimatePresence>
 
       <div ref={messagesEndRef} />

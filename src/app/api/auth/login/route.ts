@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    // Parse request body
     let body;
     try {
       body = await request.json();
@@ -15,7 +14,6 @@ export async function POST(request: NextRequest) {
 
     const { email, password } = body;
 
-    // Validate required fields
     if (!email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
@@ -44,7 +42,6 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({ email, password }),
     });
 
-    // Handle non-JSON responses
     let data;
     try {
       data = await response.json();
@@ -65,9 +62,8 @@ export async function POST(request: NextRequest) {
 
     const res = NextResponse.json(data);
 
-    // Set cookies with proper expiration times
     res.cookies.set("access_token", data.accessToken, {
-      maxAge: 15 * 60, // 15 minutes
+      maxAge: 15 * 60,
       path: "/",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -75,7 +71,7 @@ export async function POST(request: NextRequest) {
     });
 
     res.cookies.set("refresh_token", data.refreshToken, {
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+      maxAge: 7 * 24 * 60 * 60,
       path: "/",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",

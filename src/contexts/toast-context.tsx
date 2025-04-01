@@ -21,7 +21,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         open: true,
         onOpenChange: (open: boolean) => {
           if (!open) {
-            // Remove the toast after it's closed
             setToasts((prev) => prev.filter((t) => t.id !== id));
           }
         },
@@ -29,7 +28,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
       setToasts((prev) => [...prev, toast]);
 
-      // Auto-dismiss after 5 seconds
       setTimeout(() => {
         setToasts((prev) =>
           prev.map((t) => (t.id === id ? { ...t, open: false } : t)),

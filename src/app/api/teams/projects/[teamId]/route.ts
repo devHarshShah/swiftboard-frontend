@@ -5,7 +5,7 @@ export async function GET(
   { params }: { params: Promise<{ teamId: string }> },
 ) {
   try {
-    const { teamId } = await params; // Await params to extract teamId
+    const { teamId } = await params;
 
     if (!teamId) {
       return NextResponse.json(

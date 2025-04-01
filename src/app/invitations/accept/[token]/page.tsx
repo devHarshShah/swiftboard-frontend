@@ -81,14 +81,14 @@ export default function InvitationAcceptPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
-      {/* Header */}
+      {}
       <header className="bg-white border-b border-gray-200 shadow-sm py-4">
         <div className="container mx-auto px-4">
           <h1 className="text-xl font-semibold text-gray-800">SwiftBoard</h1>
         </div>
       </header>
 
-      {/* Main content */}
+      {}
       <main className="flex flex-grow items-center justify-center p-4">
         <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-8 shadow-md">
           <div className="space-y-6">
@@ -159,7 +159,7 @@ export default function InvitationAcceptPage({
         </div>
       </main>
 
-      {/* Footer */}
+      {}
       <footer className="border-t border-gray-200 py-4">
         <div className="container mx-auto px-4">
           <p className="text-center text-sm text-gray-500">

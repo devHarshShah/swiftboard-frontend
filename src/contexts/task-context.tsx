@@ -57,7 +57,6 @@ export function TaskManagerProvider({
     }
   }, [teamId]);
 
-  // Fetch tasks for the project
   const fetchTasks = useCallback(async () => {
     if (!projectId) return;
     setIsLoading(true);
@@ -66,7 +65,6 @@ export function TaskManagerProvider({
       const response = await apiClient(`/api/project/${projectId}/tasks`);
       const data: Task[] = await response.json();
 
-      // Transform tasks to include additional properties
       const extendedTasks: ExtendedTask[] = data.map((task) => ({
         ...task,
         assignedUsers: task.taskAssignments.map(
@@ -90,7 +88,6 @@ export function TaskManagerProvider({
     fetchUsers();
   }, [fetchTasks, fetchUsers]);
 
-  // Add a new empty task for editing
   const addNewTask = useCallback(() => {
     const newTask: ExtendedTask = {
       id: `new-${Date.now()}`,
@@ -110,7 +107,6 @@ export function TaskManagerProvider({
     setEditingTask(newTask);
   }, []);
 
-  // Toggle user assignment selection
   const toggleUserSelection = useCallback(
     (userId: string) => {
       if (!editingTask) return;
@@ -139,7 +135,6 @@ export function TaskManagerProvider({
         taskAssignments: updatedAssignments,
       });
 
-      // Also update in the tasks array
       setTasks((prevTasks) =>
         prevTasks.map((t) =>
           t.id === editingTask.id
@@ -151,7 +146,6 @@ export function TaskManagerProvider({
     [editingTask, users],
   );
 
-  // Toggle task blocking selection
   const toggleTaskSelection = useCallback(
     (task: Task) => {
       if (!editingTask) return;
@@ -169,7 +163,6 @@ export function TaskManagerProvider({
         blockedBy: updatedBlockedBy,
       });
 
-      // Also update in the tasks array
       setTasks((prevTasks) =>
         prevTasks.map((t) =>
           t.id === editingTask.id ? { ...t, blockedBy: updatedBlockedBy } : t,
@@ -179,7 +172,6 @@ export function TaskManagerProvider({
     [editingTask],
   );
 
-  // Define interface for the API payload
   interface TaskSaveData {
     name: string;
     description: string;
@@ -188,7 +180,6 @@ export function TaskManagerProvider({
     blockedTaskIds: string[];
   }
 
-  // Save a task (new or existing)
   const saveTask = useCallback(
     async (task: ExtendedTask) => {
       if (!projectId) return;
@@ -200,7 +191,6 @@ export function TaskManagerProvider({
           ? `/api/project/${projectId}/tasks`
           : `/api/project/${projectId}/tasks/${task.id}`;
 
-        // Prepare the data to send
         const taskData: TaskSaveData = {
           name: task.name,
           description: task.description,
@@ -214,7 +204,6 @@ export function TaskManagerProvider({
           body: JSON.stringify(taskData),
         });
 
-        // Refresh tasks to get the updated list
         fetchTasks();
       } catch (error) {
         console.error("Failed to save task", error);
@@ -223,7 +212,6 @@ export function TaskManagerProvider({
     [projectId, fetchTasks],
   );
 
-  // Move task to a new status
   const moveTask = useCallback(
     async (task: Task, newStatus: TaskStatusKey) => {
       if (!projectId) return;
@@ -235,7 +223,7 @@ export function TaskManagerProvider({
             status: newStatus,
           }),
         });
-        fetchTasks(); // Refresh tasks
+        fetchTasks();
       } catch (error) {
         console.error("Failed to move task", error);
       }
@@ -243,7 +231,6 @@ export function TaskManagerProvider({
     [projectId, fetchTasks],
   );
 
-  // Toggle task completion
   const toggleTaskCompletion = useCallback(
     async (task: Task) => {
       const newStatus = task.status === "DONE" ? "TODO" : "DONE";
@@ -252,11 +239,9 @@ export function TaskManagerProvider({
     [moveTask],
   );
 
-  // Delete a task
   const deleteTask = useCallback(
     async (taskId: string) => {
       if (!projectId || taskId.startsWith("new-")) {
-        // If it's a new unsaved task, just remove it from state
         if (taskId.startsWith("new-")) {
           setTasks((prevTasks) => prevTasks.filter((t) => t.id !== taskId));
           setEditingTask(null);
@@ -269,7 +254,7 @@ export function TaskManagerProvider({
         await apiClient(`/api/project/${projectId}/tasks/${taskId}`, {
           method: "DELETE",
         });
-        fetchTasks(); // Refresh tasks
+        fetchTasks();
       } catch (error) {
         console.error("Failed to delete task", error);
       }
@@ -277,13 +262,10 @@ export function TaskManagerProvider({
     [projectId, fetchTasks],
   );
 
-  // Cancel editing
   const cancelEditing = useCallback(() => {
-    // If we're editing a new task, remove it
     if (editingTask?.isNew) {
       setTasks((prevTasks) => prevTasks.filter((t) => t.id !== editingTask.id));
     } else if (editingTask) {
-      // Otherwise just stop editing
       setTasks((prevTasks) =>
         prevTasks.map((t) =>
           t.id === editingTask.id ? { ...t, isEditing: false } : t,
@@ -325,10 +307,8 @@ export function TaskManagerProvider({
       return;
     }
 
-    // Save the task
     saveTask(editingTask);
 
-    // Update local state to reflect changes immediately
     setTasks((prevTasks) =>
       prevTasks.map((t) =>
         t.id === editingTask.id

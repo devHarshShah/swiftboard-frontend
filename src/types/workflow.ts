@@ -17,7 +17,6 @@ export interface WorkflowNodeData {
   config: Record<string, unknown>;
 }
 
-// Node templates for workflow editor
 export interface NodeTemplate {
   type: NodeType;
   label: string;
@@ -58,7 +57,6 @@ export const nodeTemplates: NodeTemplate[] = [
   },
 ];
 
-// Types for task relationships
 export interface TaskRelationship {
   id: string;
   name: string;
@@ -71,7 +69,6 @@ export interface NodeWithRelationships {
   blocking: TaskRelationship[];
 }
 
-// Types for column definitions in tables
 export interface ColumnDefinition<TRow = unknown> {
   accessorKey?: string;
   id?: string;
@@ -82,7 +79,6 @@ export interface ColumnDefinition<TRow = unknown> {
   cell: (props: { row: TRow }) => React.ReactNode;
 }
 
-// Props for workflow components
 export interface WorkflowActionsProps {
   workflowFetched: boolean;
   handleDraft: () => void;
@@ -100,7 +96,6 @@ export interface WorkflowPanelProps {
   onAddNode: (template: NodeTemplate) => void;
 }
 
-// Backend data types for API communication
 export interface BackendWorkflowNode {
   id: string;
   position?: { x: number; y: number };
@@ -141,13 +136,11 @@ export interface BackendWorkflowData {
   updatedAt?: string;
 }
 
-// Event types for workflow node configuration
 export interface NodeConfigUpdateEvent {
   nodeId: string;
   updatedData: WorkflowNodeData;
 }
 
-// Types for transformed data for API
 export interface TransformedNode {
   id: string;
   type: string;
@@ -164,7 +157,7 @@ export interface TransformedNode {
     type: NodeType;
     description: string;
     icon?: string;
-    config: string; // Stringified JSON
+    config: string;
   };
 }
 
@@ -176,7 +169,7 @@ export interface TransformedEdge {
   sourceHandle?: string | null;
   targetHandle?: string | null;
   animated: boolean;
-  style: string; // Stringified JSON
+  style: string;
 }
 
 export interface EdgeStyle {
@@ -189,7 +182,6 @@ export interface TransformResult {
   transformedEdges: TransformedEdge[];
 }
 
-// Add global declaration for custom events
 declare global {
   interface WindowEventMap {
     nodeConfigUpdate: CustomEvent<NodeConfigUpdateEvent>;

@@ -8,8 +8,10 @@ type ModalType =
 
 interface ModalContextType {
   modalType: ModalType;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   modalProps: any;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   openModal: (type: ModalType, props?: any) => void;
   closeModal: () => void;

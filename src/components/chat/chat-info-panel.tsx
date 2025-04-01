@@ -28,7 +28,6 @@ export function ChatInfoPanel({
 }: ChatInfoPanelProps) {
   const [activeTab, setActiveTab] = useState("profile");
 
-  // Extract all image attachments
   const imageAttachments = messages
     .flatMap(
       (msg) =>
@@ -37,7 +36,6 @@ export function ChatInfoPanel({
     )
     .filter((att) => attachmentUrls[att.id]);
 
-  // Extract all other file attachments
   const fileAttachments = messages
     .flatMap(
       (msg) =>

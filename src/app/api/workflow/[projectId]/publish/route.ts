@@ -52,13 +52,11 @@ export async function POST(
         body: JSON.stringify(workflowData),
       });
 
-      // Handle different response types
       if (!response.ok) {
         let errorData;
         try {
           errorData = await response.json();
         } catch (e) {
-          // If not JSON, use status text
           console.error("Non-JSON error response:", e);
           return NextResponse.json(
             { error: `Failed to publish workflow: ${response.statusText}` },

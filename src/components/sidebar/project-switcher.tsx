@@ -41,7 +41,6 @@ export function ProjectSwitcher() {
     createdAt?: string | Date | undefined;
     updatedAt?: string | Date | undefined;
   }) => {
-    // Convert Date objects to strings and ensure values are defined
     const formattedProject = {
       id: project.id,
       name: project.name,
@@ -70,7 +69,6 @@ export function ProjectSwitcher() {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               {projects.length > 0 ? (
-                // Display active project if projects exist
                 <>
                   <Avatar className="h-8 w-8 rounded-lg">
                     <AvatarFallback className="rounded-lg">
@@ -85,7 +83,6 @@ export function ProjectSwitcher() {
                   </div>
                 </>
               ) : (
-                // Display "No Projects" if no projects exist
                 <>
                   <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-muted text-sidebar-muted-foreground">
                     <Users className="size-4" />
@@ -111,7 +108,6 @@ export function ProjectSwitcher() {
               Projects
             </DropdownMenuLabel>
             {projects.length > 0 ? (
-              // Show existing projects
               projects.map((project, index) => (
                 <DropdownMenuItem
                   key={project.id}
@@ -128,7 +124,6 @@ export function ProjectSwitcher() {
                 </DropdownMenuItem>
               ))
             ) : (
-              // Show message when no projects exist
               <DropdownMenuItem
                 disabled
                 className="text-center text-sm text-muted-foreground p-2"

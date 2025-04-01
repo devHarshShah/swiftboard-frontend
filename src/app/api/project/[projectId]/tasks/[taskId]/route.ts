@@ -59,7 +59,6 @@ export async function PATCH(
       },
     );
 
-    // Handle potential non-JSON responses
     let data;
     try {
       data = await response.json();
@@ -131,16 +130,13 @@ export async function DELETE(
     );
 
     if (response.status === 204) {
-      // No content response
       return NextResponse.json({ message: "Task deleted successfully" });
     }
 
-    // For other responses try to parse JSON
     let data;
     try {
       data = await response.json();
     } catch (e) {
-      // If it's not JSON and not 204, it's an error
       console.error("Error parsing task deletion response:", e);
       return NextResponse.json(
         { error: `Failed to delete task: ${response.statusText}` },
@@ -226,7 +222,6 @@ export async function PUT(
       },
     );
 
-    // Handle potential non-JSON responses
     let data;
     try {
       data = await response.json();

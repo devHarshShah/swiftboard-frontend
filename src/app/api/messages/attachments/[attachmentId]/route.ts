@@ -23,7 +23,6 @@ export async function GET(
       );
     }
 
-    // Get backend URL from environment variables
     const backendUrl =
       process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -39,7 +38,6 @@ export async function GET(
       `Fetching attachment from ${backendUrl}/chat/attachments/${attachmentId}`,
     );
 
-    // Get pre-signed URL from backend
     const response = await fetch(
       `${backendUrl}/chat/attachments/${attachmentId}`,
       {
@@ -50,14 +48,12 @@ export async function GET(
       },
     );
 
-    // Handle different response types
     if (!response.ok) {
       let errorMessage;
       try {
         const errorData = await response.json();
         errorMessage = errorData.message || response.statusText;
       } catch {
-        // If the response isn't JSON
         const errorText = await response.text();
         console.error("Backend attachment error:", errorText);
         errorMessage = response.statusText;
@@ -69,7 +65,6 @@ export async function GET(
       );
     }
 
-    // Handle potential non-JSON responses
     let data;
     try {
       data = await response.json();

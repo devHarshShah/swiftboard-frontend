@@ -13,7 +13,6 @@ import { TeamMember, User } from "@/src/types";
 import { AnimatePresence } from "framer-motion";
 import { debounce } from "lodash";
 
-// Import our modular components
 import { ChatHeader } from "./chat-header";
 import { ChatMessages } from "./chat-messages";
 import { MessageInput } from "./message-input";
@@ -56,7 +55,6 @@ export default function ChatInterface({
   );
   const { chatSocket } = useWebSocket();
 
-  // Group messages by date for better organization
   const getMessageDate = useCallback((date: Date) => {
     const today = new Date();
     const yesterday = new Date(today);
@@ -75,7 +73,6 @@ export default function ChatInterface({
     }
   }, []);
 
-  // Memoize the groupedMessages to prevent recalculations
   const groupedMessages = useMemo(() => {
     return messages.reduce(
       (groups, message) => {
@@ -90,12 +87,10 @@ export default function ChatInterface({
     );
   }, [messages, getMessageDate]);
 
-  // Scroll to bottom whenever messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Typing indicator handlers
   const emitStartTyping = useCallback(() => {
     const debouncedEmit = debounce(() => {
       if (chatSocket && receiverId) {
@@ -124,22 +119,18 @@ export default function ChatInterface({
     return debouncedEmit;
   }, [chatSocket, receiverId, userId]);
 
-  // Handle input changes
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
       setInput(value);
 
-      // Handle typing indicator
       if (value.length > 0) {
         emitStartTyping();
 
-        // Clear any existing timeout
         if (typingTimeout) {
           clearTimeout(typingTimeout);
         }
 
-        // Set a new timeout to stop typing
         const newTimeout = setTimeout(() => {
           emitStopTyping();
         }, 3000);
@@ -152,14 +143,11 @@ export default function ChatInterface({
     [emitStartTyping, emitStopTyping, typingTimeout],
   );
 
-  // Memoize the fetchAttachmentUrl function to maintain stable reference
   const fetchAttachmentUrl = useCallback(
     async (attachmentId: string) => {
-      // Skip if we already have the URL
       if (attachmentUrls[attachmentId]) return;
 
       try {
-        // First check if the attachment URL is already in our messages
         const attachmentWithUrl = messages.flatMap(
           (msg) =>
             msg.attachments?.filter(
@@ -168,7 +156,6 @@ export default function ChatInterface({
         )[0];
 
         if (attachmentWithUrl && "s3Url" in attachmentWithUrl) {
-          // If we already have the S3 URL in the message data, use it directly
           setAttachmentUrls((prev) => ({
             ...prev,
             [attachmentId]: attachmentWithUrl.s3Url as string,
@@ -176,7 +163,6 @@ export default function ChatInterface({
           return;
         }
 
-        // Otherwise fetch it from the API
         const response = await apiClient(
           `/api/messages/attachments/${attachmentId}`,
         );
@@ -198,10 +184,9 @@ export default function ChatInterface({
     [attachmentUrls, messages],
   );
 
-  // Set up WebSocket connection and message handling
   useEffect(() => {
     if (receiverId) {
-      setMessages([]); // Clear existing messages
+      setMessages([]);
       setInput(""); // Clear input field
       setIsTyping(false); // Reset typing indicator
       setChatInfoVisible(false);
@@ -217,7 +202,6 @@ export default function ChatInterface({
     };
 
     const handleNewMessage = (message: ServerMessage) => {
-      // Check if the message belongs to the current active conversation
       if (
         (message.senderId === userId && message.receiverId === receiverId) ||
         (message.senderId === receiverId && message.receiverId === userId)
@@ -266,18 +250,15 @@ export default function ChatInterface({
         );
         const data = await response.json();
 
-        // Apply the type to the data
         const formattedMessages = (data as MessageApiResponse[]).map((msg) => {
-          // Create properly typed message object
           const message: Message = {
             id: msg.id,
-            content: msg.text, // API returns 'text', map to 'content' for our component
+            content: msg.text,
             type: msg.senderId === userId ? "user" : "bot",
             timestamp: new Date(msg.createdAt),
             status: "read",
             attachments: msg.attachments
               ? msg.attachments.map((att) => {
-                  // Create properly typed attachment object
                   const attachment: Attachment = {
                     id: att.id,
                     filename: att.filename,
@@ -319,33 +300,27 @@ export default function ChatInterface({
     };
   }, [userId, receiverId, chatSocket]);
 
-  // Fetch attachment URLs as messages are loaded or added
   useEffect(() => {
-    // Skip if no messages
     if (messages.length === 0) return;
 
-    // Get a list of all attachments needing URLs
     const attachmentsNeedingUrls: string[] = [];
 
     messages.forEach((msg) => {
       if (!msg.attachments) return;
 
       msg.attachments.forEach((att) => {
-        // Don't refetch URLs we already have or are currently fetching
         if (!attachmentUrls[att.id] && !att.fetchingUrl) {
-          att.fetchingUrl = true; // Mark as fetching without triggering re-render
+          att.fetchingUrl = true;
           attachmentsNeedingUrls.push(att.id);
         }
       });
     });
 
-    // Fetch all needed attachment URLs
     attachmentsNeedingUrls.forEach((id) => {
       fetchAttachmentUrl(id);
     });
   }, [messages, fetchAttachmentUrl, attachmentUrls]);
 
-  // Send message handler
   const handleSendMessage = useCallback(() => {
     if (input.trim() === "" || !chatSocket || !receiverId) return;
 
@@ -383,33 +358,27 @@ export default function ChatInterface({
     showEmojiPicker,
   ]);
 
-  // Handle file uploads
   const handleFileInput = useCallback(() => {
-    // Create file input element
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*,.pdf,.doc,.docx";
     input.multiple = true;
 
-    // When files are selected
     input.onchange = async (e) => {
       const files = (e.target as HTMLInputElement).files;
       if (!files || files.length === 0 || !receiverId) return;
 
       try {
-        // Show upload indicator
         setIsUploading(true);
 
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
 
-          // Create form data
           const formData = new FormData();
           formData.append("file", file);
           formData.append("senderId", userId);
           formData.append("receiverId", receiverId);
 
-          // Send to our Next.js API proxy
           const response = await apiClient("/api/messages/upload", {
             method: "POST",
             body: formData,
@@ -426,11 +395,9 @@ export default function ChatInterface({
       }
     };
 
-    // Open file selection dialog
     input.click();
   }, [receiverId, userId]);
 
-  // Format file size helper
   const formatFileSize = useCallback((bytes: number) => {
     if (!bytes) return "0 Bytes";
     if (bytes < 1024) return bytes + " Bytes";
@@ -438,21 +405,17 @@ export default function ChatInterface({
     return (bytes / 1048576).toFixed(1) + " MB";
   }, []);
 
-  // Handle emoji selection
   const handleEmojiSelect = useCallback(
     (emoji: string) => {
       setInput((prev) => prev + emoji);
       inputRef.current?.focus();
 
-      // Trigger typing indicator when adding emoji
       emitStartTyping();
 
-      // Clear any existing timeout
       if (typingTimeout) {
         clearTimeout(typingTimeout);
       }
 
-      // Set a new timeout to stop typing
       const timeout = setTimeout(() => {
         emitStopTyping();
       }, 3000);
@@ -466,22 +429,20 @@ export default function ChatInterface({
     setChatInfoVisible((prev) => !prev);
   }, []);
 
-  // Handle "Say Hello" action in empty state
   const handleSayHello = useCallback(() => {
     setInput("Hi! How are you doing today?");
     inputRef.current?.focus();
   }, []);
 
-  // Empty state when no receiver is selected
   if (!receiverId) {
     return <ChatEmptyState type="welcome" />;
   }
 
   return (
     <div className="flex h-full bg-background border-l border-border">
-      {/* Main chat area */}
+      {}
       <div className="flex-1 flex flex-col h-full">
-        {/* Chat header */}
+        {}
         <ChatHeader
           user={user}
           userOnline={userOnline}
@@ -489,7 +450,7 @@ export default function ChatInterface({
           toggleChatInfo={toggleChatInfo}
         />
 
-        {/* Chat messages */}
+        {}
         <ScrollArea className="flex-1 py-6 px-4 bg-gradient-to-b from-background to-muted/20">
           {messages.length === 0 ? (
             <ChatEmptyState
@@ -511,12 +472,12 @@ export default function ChatInterface({
             />
           )}
 
-          {/* Typing indicator */}
+          {}
           <AnimatePresence>
             {isTyping && <TypingIndicator user={user} />}
           </AnimatePresence>
 
-          {/* File upload progress indicator */}
+          {}
           <AnimatePresence>
             {isUploading && <UploadIndicator />}
           </AnimatePresence>
@@ -524,7 +485,7 @@ export default function ChatInterface({
           <div ref={messagesEndRef} />
         </ScrollArea>
 
-        {/* Chat input */}
+        {}
         <MessageInput
           input={input}
           handleInputChange={handleInputChange}
@@ -538,7 +499,7 @@ export default function ChatInterface({
         />
       </div>
 
-      {/* Chat info panel */}
+      {}
       <AnimatePresence>
         {chatInfoVisible && (
           <ChatInfoPanel

@@ -5,7 +5,6 @@ export function transformWorkflowData(
   nodes: Node<WorkflowNodeData>[],
   edges: Edge[],
 ) {
-  // Transform nodes for API format
   const transformedNodes = nodes.map((node) => ({
     id: node.id,
     type: node.type,
@@ -21,7 +20,6 @@ export function transformWorkflowData(
     height: node.height,
   }));
 
-  // Transform edges for API format
   const transformedEdges = edges.map((edge) => ({
     id: edge.id,
     source: edge.source,

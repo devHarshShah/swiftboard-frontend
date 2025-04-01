@@ -6,7 +6,6 @@ import { TaskCard } from "./task-card";
 import { useTaskManager } from "@/src/contexts/task-context";
 import { TaskColumnProps, Task, ExtendedTask } from "@/src/types";
 
-// Type guard to check if a task is an ExtendedTask with isNew property
 function isExtendedTask(task: Task): task is ExtendedTask {
   return "isNew" in task;
 }
@@ -25,7 +24,6 @@ export const TaskColumn: React.FC<TaskColumnProps> = ({
 }) => {
   const { editingTask } = useTaskManager();
 
-  // Status count - only count non-new tasks for display
   const taskCount = tasks.filter(
     (task) => !isExtendedTask(task) || !task.isNew,
   ).length;
@@ -55,7 +53,7 @@ export const TaskColumn: React.FC<TaskColumnProps> = ({
             className={cn(
               config[status].textColor,
               "hover:bg-secondary dark:hover:bg-secondary/30",
-              // Disable button if currently editing another task
+
               editingTask && !editingTask.isNew
                 ? "opacity-50 cursor-not-allowed"
                 : "",
@@ -68,12 +66,12 @@ export const TaskColumn: React.FC<TaskColumnProps> = ({
       </div>
 
       <div className="space-y-3 overflow-y-auto scrollbar-custom flex-grow pr-1 max-h-[calc(100vh-220px)]">
-        {/* Task Form - Render at the top of the column */}
+        {}
         {children}
 
-        {/* Task Cards */}
+        {}
         {tasks
-          // Filter out new tasks as they appear in the form
+
           .filter((task) => !isExtendedTask(task) || !task.isNew)
           .map((task) => (
             <TaskCard
@@ -83,7 +81,7 @@ export const TaskColumn: React.FC<TaskColumnProps> = ({
               onMove={(newStatus) => onMoveTask(task, newStatus)}
               onDelete={() => onDeleteTask(task.id)}
               onEdit={() => onEditTask(task)}
-              isDisabled={!!editingTask} // Disable interaction when editing
+              isDisabled={!!editingTask}
             />
           ))}
 

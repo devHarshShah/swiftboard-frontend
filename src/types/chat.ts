@@ -13,7 +13,6 @@ export interface Attachment {
 export type MessageType = "user" | "bot";
 export type MessageStatus = "sent" | "delivered" | "read";
 
-// Define proper types for sender and receiver info
 export interface MessageParticipantInfo {
   id: string;
   name?: string;
@@ -45,7 +44,6 @@ interface DateGroup {
   [date: string]: Message[];
 }
 
-// Component props
 export interface ChatEmptyStateProps {
   type: "welcome" | "start-conversation";
   userName?: string;

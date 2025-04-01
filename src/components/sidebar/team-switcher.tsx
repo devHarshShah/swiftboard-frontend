@@ -41,7 +41,6 @@ export function TeamSwitcher() {
     setActiveTeam(team);
   };
 
-  // Function to handle creating a new team
   const handleCreateTeam = () => {
     openModal("CREATE_TEAM", {
       onSubmit: () => console.log("Create team clicked"),
@@ -58,7 +57,6 @@ export function TeamSwitcher() {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               {teams.length > 0 ? (
-                // Display active team if teams exist
                 <>
                   <Avatar className="h-8 w-8 rounded-lg">
                     <AvatarFallback className="rounded-lg">
@@ -80,7 +78,6 @@ export function TeamSwitcher() {
                   </div>
                 </>
               ) : (
-                // Display "Join a Team" if no teams exist
                 <>
                   <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-muted text-sidebar-muted-foreground">
                     <Users className="size-4" />
@@ -106,7 +103,6 @@ export function TeamSwitcher() {
               Teams
             </DropdownMenuLabel>
             {teams.length > 0 ? (
-              // Show existing teams
               teams.map((teamData, index) => (
                 <DropdownMenuItem
                   key={teamData.team.id}
@@ -123,7 +119,6 @@ export function TeamSwitcher() {
                 </DropdownMenuItem>
               ))
             ) : (
-              // Show message when no teams exist
               <DropdownMenuItem
                 disabled
                 className="text-center text-sm text-muted-foreground p-2"

@@ -62,9 +62,8 @@ export async function POST(request: Request) {
 
     const res = NextResponse.json(data);
 
-    // Set cookies
     nookies.set({ res }, "access_token", data.accessToken, {
-      maxAge: 15 * 60, // 15 minutes
+      maxAge: 15 * 60,
       path: "/",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -72,7 +71,7 @@ export async function POST(request: Request) {
     });
 
     nookies.set({ res }, "refresh_token", data.refreshToken, {
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+      maxAge: 7 * 24 * 60 * 60,
       path: "/",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",

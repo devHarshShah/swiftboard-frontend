@@ -39,8 +39,6 @@ export function useWorkflowOperations({
   name,
   setNodes,
   setEdges,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  workflowFetched,
 }: UseWorkflowOperationsProps) {
   const [selectedElements, setSelectedElements] = useState<{
     nodes: Node<WorkflowNodeData>[];
@@ -50,7 +48,6 @@ export function useWorkflowOperations({
   const { activeProject } = useAppContext();
   const projectId = activeProject?.id;
 
-  // Handle edge connections
   const onConnect = useCallback(
     (params: Connection) =>
       setEdges((eds) =>
@@ -66,7 +63,6 @@ export function useWorkflowOperations({
     [setEdges],
   );
 
-  // Add a new node based on template - UPDATED IMPLEMENTATION
   const onAddNode = useCallback(
     (template: (typeof nodeTemplates)[number]) => {
       if (!reactFlowInstance) return;
@@ -89,13 +85,11 @@ export function useWorkflowOperations({
         },
       };
 
-      // Directly update the nodes state instead of using onNodesChange
       setNodes((nds) => [...nds, newNode]);
     },
     [reactFlowInstance, setNodes],
   );
 
-  // Track selected elements
   const onSelectionChange = useCallback((params: OnSelectionChangeParams) => {
     const selectedNodes = params.nodes as Node<WorkflowNodeData>[];
     setSelectedElements({
@@ -104,7 +98,6 @@ export function useWorkflowOperations({
     });
   }, []);
 
-  // Delete selected elements
   const deleteSelectedElements = useCallback(() => {
     if (
       selectedElements.nodes.length > 0 ||
@@ -124,7 +117,6 @@ export function useWorkflowOperations({
     }
   }, [selectedElements, setNodes, setEdges]);
 
-  // Save as draft
   const handleDraft = async (): Promise<ApiResponse | void> => {
     try {
       if (!projectId) return;
@@ -158,7 +150,6 @@ export function useWorkflowOperations({
     }
   };
 
-  // Update existing draft
   const updateDraft = async (): Promise<ApiResponse | void> => {
     try {
       if (!projectId) return;
@@ -192,7 +183,6 @@ export function useWorkflowOperations({
     }
   };
 
-  // Publish workflow
   const publishWorkflow = async (): Promise<ApiResponse | void> => {
     try {
       if (!projectId) return;

@@ -74,7 +74,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
         </PopoverContent>
       </Popover>
 
-      {/* Display selected users */}
+      {}
       {selectedUsers.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-2">
           {selectedUsers.map((user) => (

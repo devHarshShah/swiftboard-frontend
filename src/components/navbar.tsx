@@ -9,7 +9,6 @@ const Navbar = () => {
   const [darkMode, setDarkMode] = useState(false);
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
-    // In a real implementation, this would update the theme
   };
   return (
     <header className="border-b border-border w-full py-3 px-6">

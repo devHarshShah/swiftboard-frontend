@@ -1,8 +1,7 @@
-// filepath: /home/harsh/swiftboard/swiftboard-frontend/components/Toast.tsx
 import * as ToastPrimitive from "@radix-ui/react-toast";
 import { X } from "lucide-react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "@/src/lib/utils"; // Assuming you have this utility
+import { cn } from "@/src/lib/utils";
 
 const toastVariants = cva(
   "fixed bottom-0 right-0 m-4 w-96 p-4 shadow-lg rounded-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-bottom-full",

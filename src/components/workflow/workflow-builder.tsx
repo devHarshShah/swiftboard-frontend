@@ -15,7 +15,6 @@ import WorkflowPanel from "./workflow-panel";
 import WorkflowLoading from "./workflow-loading";
 import { WorkflowNodeData } from "@/src/types/workflow";
 
-// Define the type for your workflow nodes
 type WorkflowNode = Node<WorkflowNodeData>;
 
 const nodeTypes: NodeTypes = {

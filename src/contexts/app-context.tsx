@@ -11,10 +11,8 @@ import { apiClient } from "@/src/lib/apiClient";
 import { User, Team, Project } from "@/src/types";
 import { AppContextType } from "@/src/types";
 
-// Create the context
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// Create a hook for using the context
 export function useAppContext() {
   const context = useContext(AppContext);
   if (context === undefined) {
@@ -23,7 +21,6 @@ export function useAppContext() {
   return context;
 }
 
-// Create the provider component
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -32,7 +29,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch user data
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -51,7 +47,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     fetchUserData();
   }, []);
 
-  // Fetch teams data
   useEffect(() => {
     const fetchTeamsData = async () => {
       try {
@@ -59,7 +54,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const teamsData = await teamsResponse.json();
         if (teamsResponse.ok) {
           setTeams(teamsData);
-          // Set active team to first team if we have teams and no active team
+
           if (teamsData.length > 0 && !activeTeam) {
             setActiveTeam(teamsData[0].team);
           }
@@ -76,7 +71,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     fetchTeamsData();
   }, [activeTeam]);
 
-  // Fetch projects when active team changes
   useEffect(() => {
     const fetchProjectsData = async () => {
       if (!activeTeam) return;
@@ -88,7 +82,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const projectsData = await projectsResponse.json();
         if (projectsResponse.ok) {
           setProjects(projectsData.projects);
-          // Set active project to first project if we have projects and no active project
+
           if (
             projectsData.projects.length > 0 &&
             (!activeProject || activeProject.teamId !== activeTeam.id)

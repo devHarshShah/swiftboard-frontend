@@ -36,7 +36,6 @@ const initialNodes: Node<WorkflowNodeData>[] = [
 const initialEdges: Edge[] = [];
 
 export function useWorkflowData() {
-  // Replace useNodesState and useEdgesState with regular useState
   const [nodes, setNodes] = useState<Node<WorkflowNodeData>[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
   const [name, setName] = useState("");
@@ -146,7 +145,6 @@ export function useWorkflowData() {
               }),
             ) as Node<WorkflowNodeData>[];
 
-            // Transform edges from backend format
             const transformedEdges = data.edges.map(
               (edge: BackendWorkflowEdge) => ({
                 id: edge.id,

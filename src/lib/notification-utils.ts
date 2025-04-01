@@ -24,14 +24,12 @@ export const NOTIFICATION_TYPES = {
   PROJECT_UPDATE: "project_update",
 } as const;
 
-// Define notification priorities
 export const NOTIFICATION_PRIORITIES = {
   LOW: "low",
   MEDIUM: "medium",
   HIGH: "high",
 } as const;
 
-// Define notification sources
 export const NOTIFICATION_SOURCES = {
   WEB: "web",
   MOBILE: "mobile",
@@ -40,7 +38,6 @@ export const NOTIFICATION_SOURCES = {
   API: "api",
 } as const;
 
-// TypeScript type definitions
 export type NotificationType =
   (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
 export type NotificationPriority =
@@ -48,14 +45,11 @@ export type NotificationPriority =
 export type NotificationSource =
   (typeof NOTIFICATION_SOURCES)[keyof typeof NOTIFICATION_SOURCES];
 
-// Utility to normalize types from backend (e.g., TASK_ASSIGNED -> task_assigned)
 export const normalizeType = (type: string): NotificationType => {
   if (!type) return NOTIFICATION_TYPES.SYSTEM;
 
-  // Convert SNAKE_CASE to snake_case
   const normalized = type.toLowerCase();
 
-  // Check if it's a valid type, otherwise default to system
   return Object.values(NOTIFICATION_TYPES).includes(
     normalized as NotificationType,
   )
@@ -63,7 +57,6 @@ export const normalizeType = (type: string): NotificationType => {
     : NOTIFICATION_TYPES.SYSTEM;
 };
 
-// Normalize priority
 export const normalizePriority = (priority: string): NotificationPriority => {
   if (!priority) return NOTIFICATION_PRIORITIES.MEDIUM;
 
@@ -76,7 +69,6 @@ export const normalizePriority = (priority: string): NotificationPriority => {
     : NOTIFICATION_PRIORITIES.MEDIUM;
 };
 
-// Normalize source
 export const normalizeSource = (source: string): NotificationSource => {
   if (!source) return NOTIFICATION_SOURCES.SYSTEM;
 
@@ -89,7 +81,6 @@ export const normalizeSource = (source: string): NotificationSource => {
     : NOTIFICATION_SOURCES.SYSTEM;
 };
 
-// Format date for display
 export const formatDate = (date: Date) => {
   const notifDate = new Date(date);
   return notifDate.toLocaleDateString(undefined, {
@@ -104,7 +95,6 @@ export const formatDate = (date: Date) => {
   });
 };
 
-// Get notification type details (icon, color, label)
 export const getTypeDetails = (
   type: NotificationType,
 ): {
@@ -190,7 +180,6 @@ export const getTypeDetails = (
   }
 };
 
-// Get priority badge styling
 export const getPriorityBadge = (priority: NotificationPriority) => {
   switch (priority) {
     case NOTIFICATION_PRIORITIES.HIGH:

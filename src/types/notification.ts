@@ -1,6 +1,5 @@
 import { BaseEntity } from "./common";
 
-// Import notification constants from your utils
 import {
   NOTIFICATION_TYPES,
   NOTIFICATION_PRIORITIES,
@@ -17,7 +16,7 @@ export type NotificationSource =
 export interface Notification extends BaseEntity {
   userId: string;
   message: string;
-  type: string; // Will be converted to proper type
+  type: string;
   read: boolean;
   category?: string;
   source?: string;
@@ -37,7 +36,6 @@ export interface ProcessedNotification
   timeAgo: string;
 }
 
-// Component props
 export interface EmptyNotificationsProps {
   filter: string;
   activeCategory: string;

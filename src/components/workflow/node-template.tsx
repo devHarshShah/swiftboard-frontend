@@ -17,7 +17,6 @@ export default function NodeTemplateList({
           <button
             key={index}
             className="flex items-start gap-3 p-3 w-full text-left hover:bg-gray-50 rounded-md transition-colors"
-            // Fixed: Use arrow function to properly handle click
             onClick={() => onSelectTemplate(template)}
           >
             <div

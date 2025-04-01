@@ -54,7 +54,6 @@ export default function SignupForm() {
       [name]: value,
     });
 
-    // Clear error when user types
     if (errors[name]) {
       setErrors({
         ...errors,
@@ -195,7 +194,7 @@ export default function SignupForm() {
         <Navbar />
 
         <div className="flex justify-center items-center flex-1 py-8 px-12">
-          {/* Left side: Background with content */}
+          {}
           <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-blue-800 to-indigo-900 text-white p-8 relative h-full rounded-2xl">
             <div className="flex flex-col h-full w-full">
               <div className="mb-8">
@@ -307,7 +306,7 @@ export default function SignupForm() {
             </div>
           </div>
 
-          {/* Right side: Form */}
+          {}
           <div className="w-full md:w-1/2 bg-[#0F172A] overflow-y-auto">
             <div className="max-w-xl mx-auto px-6 py-8 h-full">
               <div className="flex justify-between items-center mb-6">
@@ -418,7 +417,7 @@ export default function SignupForm() {
                     </div>
                   </div>
 
-                  {/* Mobile login link */}
+                  {}
                   <div className="mt-8 pt-4 border-t border-gray-700 text-center md:hidden">
                     <p className="text-gray-400">
                       Already have an account?{" "}

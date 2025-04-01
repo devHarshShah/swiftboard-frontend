@@ -11,7 +11,6 @@ import {
 } from "@/src/types";
 import { useTaskManager } from "@/src/contexts/task-context";
 
-// Type guard function to check if a task is an ExtendedTask with isNew property
 function isExtendedTask(task: Task): task is ExtendedTask {
   return "isNew" in task;
 }
@@ -30,7 +29,6 @@ const KanbanBoard: React.FC = () => {
     users,
   } = useTaskManager();
 
-  // Group tasks by status for the kanban columns
   const groupedTasks = useMemo(() => {
     return tasks.reduce(
       (acc, task) => {
@@ -48,16 +46,13 @@ const KanbanBoard: React.FC = () => {
     );
   }, [tasks]);
 
-  // Handle creating a new task
   const handleAddNewTask = () => {
     if (editingTask) {
-      // If already editing, cancel it first
       cancelEditing();
     }
     addNewTask();
   };
 
-  // Render loading state if data is being fetched
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-80px)]">
@@ -86,7 +81,7 @@ const KanbanBoard: React.FC = () => {
             editingTask?.isNew && editingTask.status === TaskStatus.TODO,
           )}
         >
-          {/* Show task form for new or editing tasks */}
+          {}
           {editingTask && editingTask.status === status && (
             <TaskForm
               task={editingTask}

@@ -14,7 +14,6 @@ const processTaskRelationships = (
 ): Node<WorkflowNodeData>[] => {
   const nodeMap = new Map<string, NodeWithRelationships>();
 
-  // First pass: initialize all task nodes
   nodes.forEach((node) => {
     if (node.data.type === "task") {
       nodeMap.set(node.id, {
@@ -25,25 +24,21 @@ const processTaskRelationships = (
     }
   });
 
-  // Second pass: analyze edges to build relationships
   edges.forEach((edge) => {
     const sourceNode = nodes.find((n) => n.id === edge.source);
     const targetNode = nodes.find((n) => n.id === edge.target);
 
     if (sourceNode?.data.type === "task" && targetNode?.data.type === "task") {
-      // Source task is blocking target task
       const sourceData = nodeMap.get(sourceNode.id);
       const targetData = nodeMap.get(targetNode.id);
 
       if (sourceData && targetData) {
-        // Add blocking relationship
         sourceData.blocking.push({
           id: targetNode.id,
           name: targetNode.data.label,
           description: targetNode.data.description,
         });
 
-        // Add blockedBy relationship
         targetData.blockedBy.push({
           id: sourceNode.id,
           name: sourceNode.data.label,
@@ -53,7 +48,6 @@ const processTaskRelationships = (
     }
   });
 
-  // Final pass: update nodes with relationship data
   return nodes.map((node) => {
     if (nodeMap.has(node.id)) {
       const nodeData = nodeMap.get(node.id)!;
@@ -83,10 +77,8 @@ export const transformWorkflowData = (
   nodes: Node<WorkflowNodeData>[],
   edges: Edge[],
 ): TransformResult => {
-  // Process task relationships
   const processedNodes = processTaskRelationships(nodes, edges);
 
-  // Transform nodes for API
   const transformedNodes: TransformedNode[] = processedNodes.map((node) => ({
     id: node.id,
     type: node.type || "default",
@@ -107,7 +99,6 @@ export const transformWorkflowData = (
     },
   }));
 
-  // Transform edges for API
   const transformedEdges: TransformedEdge[] = edges.map((edge) => {
     const style: EdgeStyle = {
       stroke: (edge.style as EdgeStyle)?.stroke || "#4f46e5",

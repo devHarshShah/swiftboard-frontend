@@ -9,7 +9,6 @@ import ModalContainer from "@/src/components/modals/modal.container";
 import { AppProvider, useAppContext } from "@/src/contexts/app-context";
 import { ToastProvider } from "@/src/contexts/toast-context";
 
-// This component uses the context
 function AppContent({ children }: { children: React.ReactNode }) {
   const { user, teams, projects, loading } = useAppContext();
 

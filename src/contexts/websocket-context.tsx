@@ -32,7 +32,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   const currentUser = user?.id;
 
   useEffect(() => {
-    // Chat socket connection
     const chatSocketInstance = io("http://localhost:8000/chat", {
       query: { userId: currentUser },
       transports: ["websocket"],
@@ -49,7 +48,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
     setChatSocket(chatSocketInstance);
 
-    // Notification socket connection
     const notificationSocketInstance = io(
       "http://localhost:8000/notification",
       {

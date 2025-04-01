@@ -20,7 +20,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse request body
     let body;
     try {
       body = await request.json();
@@ -33,7 +32,6 @@ export async function POST(request: NextRequest) {
 
     const { name, emails } = body;
 
-    // Validate required fields
     if (!name) {
       return NextResponse.json(
         { error: "Team name is required" },

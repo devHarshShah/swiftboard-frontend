@@ -11,7 +11,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Extract the form data from the request
     let formData;
     try {
       formData = await request.formData();
@@ -20,12 +19,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid form data" }, { status: 400 });
     }
 
-    // Extract the required fields from the form data
     const file = formData.get("file");
     const senderId = formData.get("senderId");
     const receiverId = formData.get("receiverId");
 
-    // Validate required fields
     if (!file) {
       return NextResponse.json({ error: "File is required" }, { status: 400 });
     }
@@ -44,13 +41,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create a new FormData to forward to the backend
     const backendFormData = new FormData();
     backendFormData.append("file", file);
     backendFormData.append("senderId", senderId.toString());
     backendFormData.append("receiverId", receiverId.toString());
 
-    // Get backend URL from environment variables
     const backendUrl =
       process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -58,7 +53,6 @@ export async function POST(request: NextRequest) {
     console.log(backendFormData);
 
     try {
-      // Forward the request to your backend
       const backendResponse = await fetch(`${backendUrl}/chat/upload`, {
         method: "POST",
         headers: {
@@ -67,7 +61,6 @@ export async function POST(request: NextRequest) {
         body: backendFormData,
       });
 
-      // Check if the backend request was successful
       if (!backendResponse.ok) {
         let errorMessage = `Upload failed (${backendResponse.status}): ${backendResponse.statusText}`;
 
@@ -75,14 +68,11 @@ export async function POST(request: NextRequest) {
           const errorData = await backendResponse.json();
           errorMessage = errorData.message || errorMessage;
         } catch {
-          // If not JSON, try to get text
           try {
             const errorText = await backendResponse.text();
             console.error("Backend upload error:", errorText);
             if (errorText) errorMessage = errorText;
-          } catch {
-            // If we can't get text either, use the default message
-          }
+          } catch {}
         }
 
         console.error("File upload failed:", errorMessage);
@@ -92,13 +82,12 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Parse and return successful response
       let responseData;
       try {
         responseData = await backendResponse.json();
       } catch (e) {
         console.error("Error parsing upload response:", e);
-        // If we can't parse JSON but the request was successful, return a generic success
+
         if (backendResponse.ok) {
           return NextResponse.json({
             message: "File uploaded successfully",

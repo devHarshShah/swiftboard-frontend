@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { EmojiPickerProps } from "@/src/types";
 
 export function EmojiPicker({ onEmojiSelect }: EmojiPickerProps) {
-  // Common emojis for quick access
   const emojis = [
     "😀",
     "😂",

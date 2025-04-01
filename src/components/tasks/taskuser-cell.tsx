@@ -13,7 +13,6 @@ export function TaskAssignedUsersCell({ task }: { task: ExtendedTask }) {
     );
   }
 
-  // Grouping the assignments to display
   const assignments = task.taskAssignments || [];
 
   if (assignments.length === 0) {

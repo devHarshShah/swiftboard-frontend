@@ -6,7 +6,6 @@ export interface User extends BaseEntity {
   avatar?: string;
 }
 
-// Extended user type for team members
 export type UserRole = "admin" | "member" | "guest" | "owner";
 export type UserStatus = "online" | "offline" | "away" | "busy";
 

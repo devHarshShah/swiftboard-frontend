@@ -45,7 +45,7 @@ export default function Sidebar({
   activeConversationId,
 }: {
   onSelectConversation: (user: TeamMember) => void;
-  activeConversationId?: string; // Add this prop to track the active conversation
+  activeConversationId?: string;
 }) {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,19 +57,16 @@ export default function Sidebar({
   const [showSearch, setShowSearch] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
 
-  // Use context instead of cookies
   const { activeTeam, user: currentUser } = useAppContext();
   const { chatSocket } = useWebSocket();
   const teamId = activeTeam?.id;
 
-  // Fetch unread message counts using WebSockets
   const fetchUnreadMessageCounts = useCallback(() => {
     if (!chatSocket || !currentUser?.id) return;
 
     chatSocket.emit("getUnreadCounts", { userId: currentUser.id });
   }, [chatSocket, currentUser?.id]);
 
-  // Listen for unread counts from WebSocket
   useEffect(() => {
     if (!chatSocket) return;
 
@@ -77,7 +74,7 @@ export default function Sidebar({
       setMembers((prev) =>
         prev.map((member) => ({
           ...member,
-          // Keep the unread count at 0 if the conversation is active
+
           unreadCount:
             member.id === activeConversation ? 0 : counts[member.id] || 0,
         })),
@@ -91,12 +88,10 @@ export default function Sidebar({
     };
   }, [chatSocket, activeConversation]);
 
-  // Update activeConversation when the prop changes
   useEffect(() => {
     if (activeConversationId) {
       setActiveConversation(activeConversationId);
 
-      // Mark messages as read when conversation becomes active
       if (chatSocket && currentUser?.id) {
         chatSocket.emit("markMessagesAsRead", {
           userId: currentUser.id,
@@ -104,7 +99,6 @@ export default function Sidebar({
         });
       }
 
-      // Clear unread messages for the active conversation
       setMembers((prev) =>
         prev.map((m) =>
           m.id === activeConversationId ? { ...m, unreadCount: 0 } : m,
@@ -113,14 +107,12 @@ export default function Sidebar({
     }
   }, [activeConversationId, chatSocket, currentUser?.id]);
 
-  // Improved online status tracking
   useEffect(() => {
     if (!chatSocket || !currentUser?.id) return;
 
     const handleUserStatus = (data: { userId: string }) => {
       console.log("User Status Event:", data);
 
-      // Ensure we have a valid user ID
       if (!data.userId || data.userId === "undefined") {
         console.warn("Invalid user ID received:", data.userId);
         return;
@@ -166,17 +158,14 @@ export default function Sidebar({
       );
     };
 
-    // Handle new message notification
     const handleNewMessage = (message: {
       senderId: string;
       receiverId: string;
     }) => {
-      // Only update unread count if message is for current user and not from current user
-      // AND if the conversation with the sender is not currently active
       if (
         message.receiverId === currentUser.id &&
         message.senderId !== currentUser.id &&
-        message.senderId !== activeConversation // Don't increment if conversation is active
+        message.senderId !== activeConversation
       ) {
         setMembers((prev) =>
           prev.map((member) =>
@@ -188,18 +177,15 @@ export default function Sidebar({
       }
     };
 
-    // Improved connection handling
     const requestOnlineUsers = () => {
       if (currentUser.id) {
         chatSocket.emit("userOnline", { userId: currentUser.id });
         chatSocket.emit("getOnlineUsers");
 
-        // Also fetch unread counts on connection
         fetchUnreadMessageCounts();
       }
     };
 
-    // Handle the response with all online users
     const handleOnlineUsers = (users: string[]) => {
       console.log(
         "Verified Online Users:",
@@ -211,7 +197,6 @@ export default function Sidebar({
 
       setOnlineUsers(onlineSet);
 
-      // Update all members with their online status
       setMembers((prev) =>
         prev.map((member) => ({
           ...member,
@@ -220,14 +205,12 @@ export default function Sidebar({
       );
     };
 
-    // Subscribe to events
     chatSocket.on("userOnline", handleUserStatus);
     chatSocket.on("userOffline", handleUserOffline);
     chatSocket.on("newMessage", handleNewMessage);
     chatSocket.on("onlineUsers", handleOnlineUsers);
     chatSocket.on("connect", requestOnlineUsers);
 
-    // Initial request on mount
     requestOnlineUsers();
 
     return () => {
@@ -244,7 +227,6 @@ export default function Sidebar({
     fetchUnreadMessageCounts,
   ]);
 
-  // Fetch members and their statuses
   useEffect(() => {
     const fetchMembers = async () => {
       if (!teamId) return;
@@ -254,12 +236,10 @@ export default function Sidebar({
         const response = await apiClient(`/api/teams/${teamId}/members`);
         const data = (await response.json()) as TeamMemberResponse[];
 
-        // Filter out the current user from the list
         const filteredData = data.filter(
           (member: TeamMemberResponse) => member.user.id !== currentUser?.id,
         );
 
-        // Use the onlineUsers set to determine who's online
         const teamMembers: TeamMember[] = filteredData.map(
           (member: TeamMemberResponse) => {
             const userId = member.user.id;
@@ -275,13 +255,12 @@ export default function Sidebar({
               lastActive: new Date(
                 Date.now() - Math.floor(Math.random() * 24 * 60 * 60 * 1000),
               ),
-              // Don't show unread count for active conversation
-              unreadCount: userId === activeConversation ? 0 : 0, // Initialize with 0 and fetch real counts separately
+
+              unreadCount: userId === activeConversation ? 0 : 0,
             };
           },
         );
 
-        // Sort: online first, then with unread messages, then alphabetically
         const sortedMembers = teamMembers.sort(
           (a: TeamMember, b: TeamMember) => {
             if (a.status === "online" && b.status !== "online") return -1;
@@ -292,7 +271,6 @@ export default function Sidebar({
 
         setMembers(sortedMembers);
 
-        // After setting members, fetch unread counts
         setTimeout(fetchUnreadMessageCounts, 100);
       } catch (error) {
         console.error("Failed to fetch team members:", error);
@@ -310,13 +288,10 @@ export default function Sidebar({
     fetchUnreadMessageCounts,
   ]);
 
-  // Fetch unread counts periodically
   useEffect(() => {
-    // Initial fetch
     fetchUnreadMessageCounts();
 
-    // Set up interval for periodic updates
-    const intervalId = setInterval(fetchUnreadMessageCounts, 30000); // Every 30 seconds
+    const intervalId = setInterval(fetchUnreadMessageCounts, 30000);
 
     return () => clearInterval(intervalId);
   }, [fetchUnreadMessageCounts]);
@@ -332,7 +307,6 @@ export default function Sidebar({
     return matchesSearch;
   });
 
-  // Re-sort when online status changes
   const sortedFilteredMembers = [...filteredMembers].sort((a, b) => {
     if (a.status === "online" && b.status !== "online") return -1;
     if (a.status !== "online" && b.status === "online") return 1;
@@ -341,7 +315,6 @@ export default function Sidebar({
     return a.name.localeCompare(b.name);
   });
 
-  // Format relative time for last active
   const formatRelativeTime = (date: Date) => {
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -357,7 +330,6 @@ export default function Sidebar({
     if (diffDays === 1) return "Yesterday";
     if (diffDays < 7) return `${diffDays}d ago`;
 
-    // Show date for older messages
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
@@ -365,7 +337,6 @@ export default function Sidebar({
     setActiveConversation(member.id);
     onSelectConversation(member);
 
-    // Mark messages as read when selecting conversation
     if (chatSocket && currentUser?.id) {
       chatSocket.emit("markMessagesAsRead", {
         userId: currentUser.id,
@@ -373,7 +344,6 @@ export default function Sidebar({
       });
     }
 
-    // Mark messages as read when selecting conversation
     setMembers((prev) =>
       prev.map((m) => (m.id === member.id ? { ...m, unreadCount: 0 } : m)),
     );
@@ -386,7 +356,6 @@ export default function Sidebar({
   // Count online members
   const onlineCount = members.filter((m) => m.status === "online").length;
 
-  // Count total unread messages
   const totalUnread = members.reduce(
     (sum, member) => sum + (member.unreadCount || 0),
     0,
