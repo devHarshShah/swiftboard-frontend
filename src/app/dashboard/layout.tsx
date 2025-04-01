@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { SidebarInset, SidebarProvider } from "@/src/components/ui/sidebar";
 import { AppSidebar } from "@/src/components/sidebar/app-sidebar";
 import BreadCrumbs from "@/src/components/sidebar/breadcrumbs";
@@ -11,6 +11,11 @@ import { ToastProvider } from "@/src/contexts/toast-context";
 
 function AppContent({ children }: { children: React.ReactNode }) {
   const { user, teams, projects, loading } = useAppContext();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   if (loading) {
     return (
@@ -26,7 +31,16 @@ function AppContent({ children }: { children: React.ReactNode }) {
         {user && <AppSidebar user={user} teams={teams} projects={projects} />}
         <SidebarInset>
           <BreadCrumbs />
-          <main className="w-full">{children}</main>
+          <main className="w-full">
+            {/* Use div with suppressHydrationWarning for the children */}
+            <div suppressHydrationWarning>
+              {isClient ? (
+                children
+              ) : (
+                <div className="opacity-0">{children}</div>
+              )}
+            </div>
+          </main>
         </SidebarInset>
         <ModalContainer />
       </ToastProvider>
